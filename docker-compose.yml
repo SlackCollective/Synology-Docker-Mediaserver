@@ -94,6 +94,7 @@ services:
       - calibre-web
       - jackett
       - tdarr
+      - tdarr_node
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=HostHeader(`traefik.${DOMAINNAME}`)"
@@ -443,18 +444,22 @@ services:
       - t2_proxy
     ports:
       - "${TDARR_PORT}:8265"
+      - "${TDARR_SERVER}:8266"
     volumes:
-      - ${USERDIR}/tdarr:/home/Tdarr/Documents/Tdarr
-      - ${USERDIR}/tdarr/tdarrdb:/var/lib/mongodb
-      - ${DATADIR}/media:/home/Tdarr/Media
-      - /etc/localtime:/etc/localtime:ro
-      - ${DATADIR}/media/temp:/home/Tdarr/cache
+      - ${USERDIR}/tdarr:/app/server
+      - ${DATADIR}/media/TV:/home/Tdarr/Media/TV
+      - ${DATADIR}/media/Movies:/home/Tdarr/Media/Movies
+      - ${DATADIR}/media/temp:/temp
     environment:
       - TZ=${TZ}
-#      - PUID=${PUID}
-#      - PGID=${PGID}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - serverIP=x.x.x.x #edit as necessary
+      - webUIPort=8265
+      - serverPort=8266
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=t2_proxy"
       ## HTTP Routers
       - "traefik.http.routers.tdarr.entrypoints=https"
       - "traefik.http.routers.tdarr.rule=HostHeader(`tdarr.${DOMAINNAME}`)"
@@ -462,6 +467,41 @@ services:
       - "traefik.http.routers.tdarr.middlewares=securityheaders,googleauth"
       ## Service
       - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
+      ## Watchtower
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  tdarr_node:
+    image: haveagitgat/tdarr_node:latest
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "10"
+    container_name: tdarr_node
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    ports:
+      - "${TDARR_NODE}:8267"
+    volumes:
+      - ${DATADIR}/media/TV:/home/Tdarr/Media/TV
+      - ${DATADIR}/media/Movies:/home/Tdarr/Media/Movies
+      - ${DATADIR}/media/temp:/temp
+    environment:
+      - nodeID=MyTdarrNode
+      - nodeIP=x.x.x.x #edit as necessary
+      - nodePort=8267
+      - serverIP=x.x.x.x #edit as necessary
+      - serverPort=8266
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.tdarrnode.entrypoints=https"
+      ## TLS and middlewares
+      ## Service
+      - "traefik.http.services.tdarrnode.loadbalancer.server.port=8267"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
       
@@ -535,20 +575,13 @@ services:
     restart: unless-stopped
     networks:
       - t2_proxy
-    ports:
-      - "${WATCHTOWER_PORT}:4189"
     logging:
       options:
         max-size: "200k"
         max-file: "10"
-    command: --schedule "0 0 6 * * *" --label-enable --cleanup
+    command: --schedule "0 0 6 * * *" --label-enable --cleanup --include-restarting
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
     environment:
       - TZ=${TZ}
-    labels:
-      - "traefik.enable=true"
-      # HTTP Service
-      - "traefik.http.routers.watchtower-rtr.service=watchtower-svc"
-      - "traefik.http.services.watchtower-svc.loadBalancer.server.port=4189"
