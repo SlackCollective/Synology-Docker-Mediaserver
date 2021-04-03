@@ -15,6 +15,7 @@ Containers in use:
       - jackett
       - tdarr
       - dozzle
+      - cert-dumper
       
       Requires docker-compose.yaml and .env file in the same directory,
       as well as an .ovpn file for those who want to run the Deluge container behind a VPN
