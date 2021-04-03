@@ -106,20 +106,6 @@ services:
       - CF_API_KEY=${CLOUDFLARE_API_KEY}
       - CF_DNS_API_TOKEN=${CLOUDFLARE_TOKEN}
       - TZ=${TZ}
-    depends_on:
-      - oauth
-      - organizr
-      - sabnzbd
-      - deluge
-      - jackett
-      - radarr
-      - sonarr
-      - calibre-web
-      - bazarr
-      - portainer
-      - watchtower
-      - tdarr
-      - tdarr_node
     labels:
       #- "autoheal=true"
       - "traefik.enable=true"
@@ -219,7 +205,7 @@ services:
       - "traefik.enable=true"
       ## HTTP Routers
       - "traefik.http.routers.portainer-rtr.entrypoints=https"
-      - "traefik.http.routers.portainer-rtr.rule=HostHeader(`portainer.${DOMAINNAME}`)"
+      - "traefik.http.routers.portainer-rtr.rule=Host(`portainer.${DOMAINNAME}`)"
       ## TLS and middlewares
       - "traefik.http.routers.portainer-rtr.middlewares=securityheaders,googleauth"
       ## Service
