@@ -14,6 +14,7 @@ Containers in use:
       - calibre-web
       - jackett
       - tdarr
+      - dozzle
       
       Requires docker-compose.yaml and .env file in the same directory,
       as well as an .ovpn file for those who want to run the Deluge container behind a VPN
