@@ -314,58 +314,32 @@ services:
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
-# Deluge with VPN – Bittorrent Downloader
+# Deluge - Bittorrent Downloader
   deluge:
-    image: binhex/arch-delugevpn
-    cap_add:
-      - NET_ADMIN
-    logging:
-      options:
-        max-size: "200k"
-        max-file: "10"
+    image: ghcr.io/linuxserver/deluge
     container_name: deluge
     restart: unless-stopped
-    networks:
-      - t2_proxy
-    ports:
-      - "${DELUGE_PORT}:8112"
-      - "${PRIVOXY_PORT}:8118"
-      - "58846:58846"
-      - "58946:58946"
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - DELUGE_LOGLEVEL=error #optional
     volumes:
-      - ${USERDIR}/delugevpn:/config
-      - ${USERDIR}/delugevpn/data:/data  
+      - ${USERDIR}/deluge:/config
       - ${DATADIR}/downloads:/downloads
       - ${DATADIR}/downloads/blackhole:/torrenthole
       - /etc/localtime:/etc/localtime:ro
-    environment:
-      - VPN_ENABLED=yes
-      - VPN_USER=${VPN_USER}
-      - VPN_PASS=${VPN_PASSWORD}
-      - VPN_PROV=custom
-#      - VPN_OPTIONS=<additional openvpn cli options>
-      - STRICT_PORT_FORWARD=no
-      - TZ=${TZ}
-      - DEBUG=false
-#      - ADDITIONAL_PORTS=<port number(s)>
-      - UMASK_SET=000
-      - DELUGE_DAEMON_LOG_LEVEL=error
-      - DELUGE_WEB_LOG_LEVEL=error
-      - ENABLE_PRIVOXY=yes
-      - LAN_NETWORK=192.168.1.0/24
-      - NAME_SERVERS=1.1.1.1
-      - PUID=${PUID}
-      - PGID=${PGID}
     labels:
       - "traefik.enable=true"
       ## HTTP Routers
-      - "traefik.http.routers.delugevpn-rtr.entrypoints=https"
-      - "traefik.http.routers.delugevpn-rtr.rule=Host(`deluge.${DOMAINNAME}`)"
+      - "traefik.http.routers.deluge-rtr.entrypoints=https"
+      - "traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.delugevpn-rtr.middlewares=securityheaders,googleauth"
+      - "traefik.http.routers.deluge-rtr.middlewares=securityheaders,googleauth"
       ## Service
-      - "traefik.http.routers.delugevpn-rtr.service=delugevpn-svc"
-      - "traefik.http.services.delugevpn-svc.loadbalancer.server.port=8112"
+      - "traefik.http.routers.deluge-rtr.service=deluge-svc"
+      - "traefik.http.services.deluge-svc.loadbalancer.server.port=8112"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
