@@ -4,7 +4,7 @@ Working configuration of media services, running Traefik and various other Docke
 Containers in use:
       - oauth
       - watchtower
-      - portainer
+      - nzbhydra2
       - organizr
       - sonarr
       - radarr
@@ -14,8 +14,10 @@ Containers in use:
       - calibre-web
       - jackett
       - tdarr
+      - tdarr-node
       - dozzle
       - cert-dumper
+      - traefik
       
       Requires docker-compose.yaml and .env file in the same directory,
       as well as an .ovpn file for those who want to run the Deluge container behind a VPN
