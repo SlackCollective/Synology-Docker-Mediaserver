@@ -1,0 +1,16 @@
+http:
+  routers:
+    synology-rtr:
+      rule: "HostHeader(`synology.domain.com`)" 
+      entryPoints:
+        - https
+      middlewares:
+        - middlewares-oauth
+      service: synology-svc
+      tls:
+        certResolver: dns-cloudflare
+  services:
+    synology-svc:
+      loadBalancer:
+        servers:
+          - url: "http://xxx.xxx.xxx.xxx:5004"  # or whatever your external host's IP:port is 
