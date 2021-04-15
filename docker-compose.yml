@@ -1,9 +1,5 @@
 version: "3.7"
 ########################### NETWORKS
-# There is no need to create any networks outside this docker-compose file.
-# You may customize the network subnets (192.168.90.0/24 and 91.0/24) below as you please.
-# Docker Compose version 3.5 or higher required to define networks this way.
-
 networks:
   t2_proxy:
     name: t2_proxy
@@ -25,6 +21,22 @@ services:
   traefik:
     container_name: traefik
     image: traefik:livarot # the livarot tag refers to v2.4.x
+    depends_on: #delays container start until all are running
+      - oauth
+      - organizr
+      - sonarr
+      - radarr
+      - sabnzbd
+      - deluge
+      - hydra
+      - jackett
+      - calibre-web
+      - tdarr
+      - tdarr_node
+      - bazarr
+      - dozzle
+      - watchtower
+      - certdumper
     restart: unless-stopped
     command: # CLI arguments
       - --global.checkNewVersion=true
@@ -34,11 +46,8 @@ services:
       # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
       - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22,172.18.0.1/24,192.168.1.1/24,172.18.0.1/24
       - --entryPoints.traefik.address=:8080
-      # - --entryPoints.ping.address=:8081
       - --api=true
-      # - --api.insecure=true
       - --api.dashboard=true
-      #- --ping=true
       # - --pilot.token=5a60880b-5c40-4262-b904-772e04b4fa95
       # - --serversTransport.insecureSkipVerify=true
       - --log=true
@@ -48,25 +57,15 @@ services:
       - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
       - --accessLog.filters.statusCodes=400-499
       - --providers.docker=true
-      - --providers.docker.endpoint=unix:///var/run/docker.sock # Use Docker Socket Proxy instead for improved security
-      # - --providers.docker.endpoint=tcp://socket-proxy:2375
-      # Automatically set Host rule for services
-      # - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.$DOMAINNAME0`)
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedByDefault=false
-      # - --entrypoints.https.http.middlewares=chain-oauth@file
-      # - --entrypoints.https.http.tls.options=tls-opts@file
-      # Add dns-cloudflare as default certresolver for all services. Also enables TLS and no need to specify on individual services
-      - --entrypoints.https.http.tls.certresolver=dns-cloudflare
       - --entrypoints.https.http.tls.domains[0].main=${DOMAINNAME}
       - --entrypoints.https.http.tls.domains[0].sans=*.${DOMAINNAME}
-      # - --entrypoints.https.http.tls.domains[1].main=$DOMAINNAME1 # Pulls main cert for second domain
-      # - --entrypoints.https.http.tls.domains[1].sans=*.$DOMAINNAME1 # Pulls wildcard cert for second domain
       - --providers.docker.network=t2_proxy
       - --providers.docker.swarmMode=false
       # - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
       # - --providers.file.filename=/path/to/file # Load dynamic configuration from a file
       # - --providers.file.watch=true # Only works on top level files in the rules folder
-      # - --certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory # LetsEncrypt Staging Server - uncomment when testing
       - --certificatesResolvers.dns-cloudflare.acme.email=${CLOUDFLARE_EMAIL}
       - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
       - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
@@ -74,40 +73,29 @@ services:
       - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.delayBeforeCheck=90 # To delay DNS check and reduce LE hitrate
     networks:
       t2_proxy:
-        # ipv4_address: 192.168.90.254 # You can specify a static IP
-      # socket_proxy:
     security_opt:
       - no-new-privileges:true
-    #healthcheck:
-    #  test: ["CMD", "traefik", "healthcheck", "--ping"]
-    #  interval: 5s
-    #  retries: 3
     ports:
       - target: 80
-        published: 89 #with 80 forwarded to 89 in router settings, to get around Synology's restrictions
+        published: 89 # 80 fwd to 89 in router to get around Synology control of 80
         protocol: tcp
         mode: host
-      - target: 443
-        published: 449 #with 443 forwarded to 89 in router settings, to get around Synology's restrictions
+      - target: 443 
+        published: 449 #443 fwd to 449 in router to get around Synology control of 80
         protocol: tcp
         mode: host
-      # - target: 8080
-      #   published: 8080
-      #   protocol: tcp
-      #   mode: host
     volumes:
       - ${USERDIR}/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
       - ${USERDIR}/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting the container
       - ${USERDIR}/traefik2:/etc/traefik
-      # - $DOCKERDIR/appdata/traefik2/rules:/rules # file provider directory
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
+      # - ${USERDIR}/traefik2/rules:/rules # file provider directory
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - CF_API_EMAIL=${CLOUDFLARE_EMAIL}
       - CF_API_KEY=${CLOUDFLARE_API_KEY}
       - CF_DNS_API_TOKEN=${CLOUDFLARE_TOKEN}
       - TZ=${TZ}
     labels:
-      #- "autoheal=true"
       - "traefik.enable=true"
       # HTTP-to-HTTPS Redirect
       - "traefik.http.routers.http-catchall.entrypoints=http"
@@ -119,10 +107,6 @@ services:
       - "traefik.http.routers.traefik-rtr.rule=Host(`traefik.${DOMAINNAME}`)"
       ## Services - API
       - "traefik.http.routers.traefik-rtr.service=api@internal"
-      ## Healthcheck/ping
-      #- "traefik.http.routers.ping.rule=Host(`traefik.$DOMAINNAME`) && Path(`/ping`)"
-      #- "traefik.http.routers.ping.tls=true"
-      #- "traefik.http.routers.ping.service=ping@internal"
       ## Middlewares
       - "traefik.http.routers.traefik-rtr.middlewares=googleauth"  
       ## Middlewares security headers for services
@@ -134,7 +118,7 @@ services:
       - "traefik.http.middlewares.securityheaders.headers.stsIncludeSubdomains=true"
       - "traefik.http.middlewares.securityheaders.headers.stsPreload=true"
       - "traefik.http.middlewares.securityheaders.headers.forceSTSHeader=true"
-      - "traefik.http.middlewares.securityheaders.headers.customFrameOptionsValue=allow-from https:mydomain.com" #CSP takes care of this but may be needed for organizr
+      - "traefik.http.middlewares.securityheaders.headers.customFrameOptionsValue=allow-from https:domain.com" #CSP takes care of this but may be needed for organizr
       - "traefik.http.middlewares.securityheaders.headers.contentTypeNosniff=true"
       - "traefik.http.middlewares.securityheaders.headers.browserXssFilter=true"
       - "traefik.http.middlewares.securityheaders.headers.referrerPolicy=same-origin"
@@ -159,7 +143,7 @@ services:
       - INSECURE_COOKIE=false
       - AUTH_HOST=oauth.${DOMAINNAME}
       - URL_PATH=/_oauth
-      - WHITELIST=myemail@domain.com #comma-separated list of authorised users
+      - WHITELIST=email@email.com #add comma-separated addresses for GAuth
       - LOG_LEVEL=warn
       - LOG_FORMAT=text
       - LIFETIME=2592000 # 30 days
@@ -177,86 +161,6 @@ services:
       - "traefik.http.middlewares.googleauth.forwardauth.address=http://oauth:4181"
       - "traefik.http.middlewares.googleauth.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.googleauth.forwardauth.trustForwardHeader=true"
-      ## Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-
-  ############################# MAINTENANCE
-  # Portainer - WebUI for Containers
-  portainer:
-    container_name: portainer
-    image: portainer/portainer-ce:latest
-    restart: unless-stopped
-    command: -H unix:///var/run/docker.sock #less secure
-    networks:
-      - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    # ports:
-      # - "${PORTAINER_PORT}:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro #enable if using docker.sock
-      - /etc/localtime:/etc/localtime:ro
-      - ${USERDIR}/portainer:/data
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.portainer-rtr.entrypoints=https"
-      - "traefik.http.routers.portainer-rtr.rule=Host(`portainer.${DOMAINNAME}`)"
-      ## TLS and middlewares
-      - "traefik.http.routers.portainer-rtr.middlewares=securityheaders,googleauth"
-      ## Service
-      - "traefik.http.routers.portainer-rtr.service=portainer-svc"
-      - "traefik.http.services.portainer-svc.loadbalancer.server.port=9000"
-      ## Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
-      
-  # Watchtower - Automatic Update of Containers/Apps
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: watchtower
-    restart: unless-stopped
-    networks:
-      - t2_proxy
-    logging:
-      options:
-        max-size: "200k"
-        max-file: "10"
-    command: --schedule "0 0 6 * * *" --label-enable --cleanup --include-restarting
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  # Dozzle - Real-time Docker Log Viewer
-  dozzle:
-    image: amir20/dozzle:latest
-    container_name: dozzle
-    restart: unless-stopped
-    networks:
-      - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    # ports:
-    #   - "$DOZZLE_PORT:8080"
-    environment:
-      DOZZLE_LEVEL: info
-      DOZZLE_TAILSIZE: 300
-      DOZZLE_FILTER: "status=running"
-      # DOZZLE_FILTER: "label=log_me" # limits logs displayed to containers with this label
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Use Docker Socket Proxy instead for improved security
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.dozzle-rtr.entrypoints=https"
-      - "traefik.http.routers.dozzle-rtr.rule=Host(`dozzle.$DOMAINNAME`)"
-      ## TLS and middlewares
-      - "traefik.http.routers.dozzle-rtr.middlewares=securityheaders,googleauth"
-      ## HTTP Services
-      - "traefik.http.routers.dozzle-rtr.service=dozzle-svc"
-      - "traefik.http.services.dozzle-svc.loadbalancer.server.port=8080"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -303,8 +207,6 @@ services:
       - t2_proxy
     security_opt:
       - no-new-privileges:true
-    # ports:
-      # - "${SONARR_PORT}:8989"
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -344,8 +246,6 @@ services:
       - t2_proxy
     security_opt:
       - no-new-privileges:true
-    # ports:
-      # - "${RADARR_PORT}:7878"
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -429,7 +329,7 @@ services:
       - t2_proxy
     ports:
       - "${DELUGE_PORT}:8112"
-      - "8118:8118"
+      - "${PRIVOXY_PORT}:8118"
       - "58846:58846"
       - "58946:58946"
     volumes:
@@ -452,7 +352,7 @@ services:
       - DELUGE_DAEMON_LOG_LEVEL=error
       - DELUGE_WEB_LOG_LEVEL=error
       - ENABLE_PRIVOXY=yes
-      - LAN_NETWORK=0.0.0.0
+      - LAN_NETWORK=192.168.1.0/24
       - NAME_SERVERS=1.1.1.1
       - PUID=${PUID}
       - PGID=${PGID}
@@ -483,8 +383,6 @@ services:
         max-file: "10"
     security_opt:
       - no-new-privileges:true
-    # ports:
-    #   - "$NZBHYDRA_PORT:5076"
     volumes:
       - ${USERDIR}/hydra2:/config
       - ${DATADIR}/downloads/blackhole:/data/downloads
@@ -522,8 +420,6 @@ services:
       - t2_proxy
     security_opt:
       - no-new-privileges:true
-    # ports:
-      # - "${JACKETT_PORT}:9117"
     volumes:
       - ${USERDIR}/jackett:/config
       - ${DATADIR}/downloads/blackhole:/downloads
@@ -555,8 +451,6 @@ services:
       - t2_proxy
     security_opt:
       - no-new-privileges:true
-    # ports:
-     # - "${CALIBRE_PORT}:8083"
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}/media/Books:/books
@@ -598,15 +492,13 @@ services:
       - "${TDARR_PORT}:8265"
       - "${TDARR_SERVER}:8266"
     volumes:
-      - ${USERDIR}/tdarr:/app/server
+      - ${USERDIR}:/app/server
       - ${DATADIR}/media/TV:/home/Tdarr/Media/TV
       - ${DATADIR}/media/Movies:/home/Tdarr/Media/Movies
       - ${DATADIR}/media/temp:/temp
     environment:
       - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - serverIP=000.000.000.000 #your Synology NAS IP (LAN)
+      - serverIP=xxx.xxx.xxx.xxx #LAN IP of Synology
       - webUIPort=8265
       - serverPort=8266
     labels:
@@ -641,13 +533,11 @@ services:
       - ${DATADIR}/media/temp:/temp
     environment:
       - nodeID=BrunswickTdarrNode
-      - nodeIP=000.000.000.000 #your Synology NAS IP (LAN)
+      - nodeIP=xxx.xxx.xxx.xxx #LAN IP of Synology
       - nodePort=8267
-      - serverIP=000.000.000.000 #your Synology NAS IP (LAN)
+      - serverIP=xxx.xxx.xxx.xxx #LAN IP of Synology
       - serverPort=8266
       - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
     labels:
       - "traefik.enable=true"
       ## HTTP Routers
@@ -659,7 +549,7 @@ services:
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
-# Subtitle searching
+# Subtitle searching and downloading, based on release filename
   bazarr:
     image: linuxserver/bazarr:latest
     container_name: bazarr
@@ -668,8 +558,6 @@ services:
       - t2_proxy
     security_opt:
       - no-new-privileges:true
-    # ports:
-      # - "${BAZARR_PORT}:6767"
     volumes:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media/Movies:/movies
@@ -699,6 +587,35 @@ services:
       - "com.centurylinklabs.watchtower.enable=true"
 
   ############################# MAINTENANCE
+  # Dozzle - Real-time Docker Log Viewer
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DOZZLE_LEVEL: info
+      DOZZLE_TAILSIZE: 300
+      DOZZLE_FILTER: "status=running"
+      # DOZZLE_FILTER: "label=log_me" # limits logs displayed to containers with this label
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.dozzle-rtr.entrypoints=https"
+      - "traefik.http.routers.dozzle-rtr.rule=Host(`dozzle.${DOMAINNAME}`)"
+      ## TLS and middlewares
+      - "traefik.http.routers.dozzle-rtr.middlewares=securityheaders,googleauth"
+      ## HTTP Services
+      - "traefik.http.routers.dozzle-rtr.service=dozzle-svc"
+      - "traefik.http.services.dozzle-svc.loadbalancer.server.port=8080"
+      ## Watchtower
+      - "com.centurylinklabs.watchtower.enable=true"
+
   # Traefik Certs Dumper - Extract LetsEncrypt Certificates - Traefik2 Compatible
   certdumper:
     container_name: certdumper
@@ -710,6 +627,21 @@ services:
     volumes:
       - ${USERDIR}/traefik2/acme:/traefik:ro
       - ${USERDIR}/shared/certs:/output:rw
-      # - /var/run/docker.sock:/var/run/docker.sock:ro # Only needed if restarting containers (use Docker Socket Proxy instead)
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # Only needed if restarting containers
     environment:
       DOMAIN: ${DOMAINNAME}
+
+  # Watchtower - Automatic Update of Containers/Apps
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    logging:
+      options:
+        max-size: "200k"
+        max-file: "10"
+    command: --schedule "0 0 6 * * *" --label-enable --cleanup --include-restarting
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
