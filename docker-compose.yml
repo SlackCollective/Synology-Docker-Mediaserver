@@ -330,18 +330,6 @@ services:
       - ${DATADIR}/downloads:/downloads
       - ${DATADIR}/downloads/blackhole:/torrenthole
       - /etc/localtime:/etc/localtime:ro
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.deluge-rtr.entrypoints=https"
-      - "traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAINNAME}`)"
-      ## TLS and middlewares
-      - "traefik.http.routers.deluge-rtr.middlewares=securityheaders,googleauth"
-      ## Service
-      - "traefik.http.routers.deluge-rtr.service=deluge-svc"
-      - "traefik.http.services.deluge-svc.loadbalancer.server.port=8112"
-      ## Watchtower
-      - "com.centurylinklabs.watchtower.enable=true"
 
   ############################# INDEXERS
   # NZBHydra2 - NZB meta search
