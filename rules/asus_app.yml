@@ -1,11 +1,11 @@
 http:
   routers:
     asus-rtr:
-      rule: "HostHeader(`asus.domain.com`)" 
+      rule: "Host(`asus.domain.com`)" 
       entryPoints:
         - https
       middlewares:
-        - middlewares-oauth
+        - middlewares-oauth,middlewares-secure-headers
       service: asus-svc
       tls:
         certResolver: dns-cloudflare
