@@ -5,7 +5,7 @@ http:
       entryPoints:
         - https
       middlewares:
-        - middlewares-oauth
+        - middlewares-oauth,middlewares-secure-headers
       service: synology-svc
       tls:
         certResolver: dns-cloudflare
