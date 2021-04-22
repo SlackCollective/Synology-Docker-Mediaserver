@@ -314,22 +314,65 @@ services:
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
-# Deluge - Bittorrent Downloader
+# Deluge - Bittorrent Downloader with VPN
   deluge:
-    image: ghcr.io/linuxserver/deluge
+    image: binhex/arch-delugevpn
     container_name: deluge
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - t2_proxy
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    logging:
+      driver: json-file
+      options:
+        max-size: "100k"
+        max-file: "5"
+    ports:
+      - 8112:8112
+      - 8118:8118
+      - 58846:58846
+      - 58946:58946
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    volumes:
+      - ${USERDIR}/deluge:/config
+      - ${DATADIR}/downloads:/data
+      - /etc/localtime:/etc/localtime:ro
     environment:
+      - VPN_ENABLED=yes
+      - VPN_USER=${VPN_USER}
+      - VPN_PASS=${VPN_PASSWORD}
+      - VPN_PROV=custom
+#      - VPN_OPTIONS=<additional openvpn cli options>
+      - STRICT_PORT_FORWARD=no
+      - DEBUG=false
+#      - ADDITIONAL_PORTS=<port number(s)>
+      - UMASK=000
+      - DELUGE_DAEMON_LOG_LEVEL=error
+      - DELUGE_WEB_LOG_LEVEL=error
+      - DELUGE_LOGLEVEL=error #optional
+      - ENABLE_PRIVOXY=yes
+      - LAN_NETWORK=192.168.0.0/16
+      - NAME_SERVERS=8.8.8.8
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DELUGE_LOGLEVEL=error #optional
-    volumes:
-      - ${USERDIR}/deluge:/config
-      - ${DATADIR}/downloads:/downloads
-      - ${DATADIR}/downloads/blackhole:/torrenthole
-      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.deluge-rtr.entrypoints=https"
+      - "traefik.http.routers.deluge-rtr.rule=Host(`deluge.${DOMAINNAME}`)"
+      ## TLS and middlewares
+      - "traefik.http.routers.deluge-rtr.middlewares=securityheaders"
+      ## Service
+      - "traefik.http.routers.deluge-rtr.service=deluge-svc"
+      - "traefik.http.services.deluge-svc.loadbalancer.server.port=8112"
+      ## Watchtower
+      - "com.centurylinklabs.watchtower.enable=true"
 
   ############################# INDEXERS
   # NZBHydra2 - NZB meta search
