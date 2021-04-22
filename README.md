@@ -8,7 +8,7 @@ Containers in use:
       - organizr
       - sonarr
       - radarr
-      - deluge
+      - delugevpn
       - sabnzbd
       - bazarr
       - calibre-web
@@ -23,4 +23,4 @@ Requires docker-compose.yaml and .env file in the same directory.
 
 oAuth is applied to all containers, with API bypass possible though having created a separate router (see container labels) for oAuth and non-oAuth services.
 
-If you want to connect to non-Docker services, uncomment the relevant "file" provider labels for the Traefik container in docker-compose, and edit the files in the "rules" directory accordingly. The "rules" directory must be nested inside your Traefik config folder on the Synology. For external access to Deluge, you'd need to add a config file for it in the "rules" directory, and uncomment the file provider labels, as well as mount the rules directory.
+If you want to connect to non-Docker services, uncomment the relevant "file" provider labels for the Traefik container in docker-compose, and edit the files in the "rules" directory accordingly. The "rules" directory must be nested inside your Traefik config folder on the Synology. For VPN integration with Deluge, you need to add the appropriate .ovpn file - check the container's Github for details.
