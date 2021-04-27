@@ -239,7 +239,7 @@ services:
   # Radarr - Movie management
   # Set url_base in radarr settings if using PathPrefix
   radarr:
-    image: linuxserver/radarr:nightly
+    image: ghcr.io/linuxserver/radarr
     container_name: radarr
     restart: unless-stopped
     networks:
