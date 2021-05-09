@@ -4,11 +4,6 @@ networks:
   t2_proxy:
     name: t2_proxy
     driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.90.0/24
-  default:
-    driver: bridge
 
 ########################### SERVICES
 services:
