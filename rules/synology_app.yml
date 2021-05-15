@@ -1,7 +1,7 @@
 http:
   routers:
     synology-rtr:
-      rule: "HostHeader(`synology.domain.com`)" 
+      rule: "Host(`synology.domain.com`)" 
       entryPoints:
         - https
       middlewares:
