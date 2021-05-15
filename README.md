@@ -8,7 +8,7 @@ Containers in use:
       - organizr
       - sonarr
       - radarr
-      - delugevpn
+      - deluge
       - sabnzbd
       - bazarr
       - calibre-web
