@@ -5,7 +5,7 @@ http:
       entryPoints:
         - https
       middlewares:
-        - middlewares-oauth,middlewares-secure-headers
+        - googleauth,securityheaders
       service: asus-svc
       tls:
         certResolver: dns-cloudflare
