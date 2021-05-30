@@ -30,10 +30,10 @@ services:
       # - --pilot.token=token_number
       - --log=true
       - --log.level=ERROR # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
-      - --accessLog=true
-      - --accessLog.filePath=/traefik.log
-      - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
-      - --accessLog.filters.statusCodes=400-499
+      # - --accessLog=true
+      # - --accessLog.filePath=/traefik.log
+      # - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+      # - --accessLog.filters.statusCodes=400-499
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedByDefault=false
@@ -69,7 +69,7 @@ services:
         mode: host
     volumes:
       - ${USERDIR}/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
-      - ${USERDIR}/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting the container
+      # - ${USERDIR}/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting the container
       - ${USERDIR}/traefik2:/etc/traefik
       - ${USERDIR}/traefik2/rules:/rules # file provider directory
       - /var/run/docker.sock:/var/run/docker.sock:ro
