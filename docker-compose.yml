@@ -4,6 +4,7 @@ networks:
   t2_proxy:
     name: t2_proxy
     driver: bridge
+    # ipv4_address: 192.168.254.254 # You can specify a static IP
 
 ########################### SERVICES
 services:
@@ -11,40 +12,22 @@ services:
   traefik:
     container_name: traefik
     image: traefik:livarot # the livarot tag refers to v2.4.x
-    depends_on: #delays container start until all are running
-      - oauth
-      - calibre-web
-      - deluge
-      - hydra
-      - jackett
-      - sonarr
-      - radarr
-      - sabnzbd
-      - bazarr
-      - watchtower
-      - dozzle
-      - certdumper
-      - organizr
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     command: # CLI arguments
       - --global.checkNewVersion=true
       - --global.sendAnonymousUsage=true
       - --entryPoints.http.address=:80
       - --entryPoints.https.address=:443
-      # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+      # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs:
       - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22,172.18.0.1/24,192.168.1.1/24,172.18.0.1/24,172.17.0.1/24
       - --entryPoints.traefik.address=:8080
       - --api=true
       # - --api.insecure=true
       # - --serversTransport.insecureSkipVerify=true
       - --api.dashboard=true
-      # - --pilot.token=5a60880b-5c40-4262-b904-772e04b4fa95
-      # - --serversTransport.insecureSkipVerify=true
+      # - --pilot.token=token_number
       - --log=true
       - --log.level=ERROR # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
       - --accessLog=true
@@ -54,6 +37,8 @@ services:
       - --providers.docker=true
       - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --providers.docker.exposedByDefault=false
+      - --entrypoints.https.http.tls.options=tls-opts@file
+      - --entrypoints.https.http.tls.certresolver=dns-cloudflare
       - --entrypoints.https.http.tls.domains[0].main=${DOMAINNAME}
       - --entrypoints.https.http.tls.domains[0].sans=*.${DOMAINNAME}
       - --providers.docker.network=t2_proxy
@@ -61,6 +46,7 @@ services:
       - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory
       # - --providers.file.filename=/path/to/file # Load dynamic configuration from a file
       - --providers.file.watch=true # Only works on top level files in the rules folder
+      # - --certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory # LetsEncrypt Staging Server - uncomment when testing
       - --certificatesResolvers.dns-cloudflare.acme.email=${CLOUDFLARE_EMAIL}
       - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
       - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
@@ -68,23 +54,26 @@ services:
       - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.delayBeforeCheck=90 # To delay DNS check and reduce LE hitrate
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     ports:
       - target: 80
         published: 89 # 80 fwd to 89 in router to get around Synology control of 80
         protocol: tcp
-        # mode: host
-      - target: 443 
+        mode: host
+      - target: 443
         published: 449 #443 fwd to 449 in router to get around Synology control of 80
         protocol: tcp
-        # mode: host
+        mode: host
+      - target: 8080
+        published: 8080 #443 fwd to 449 in router to get around Synology control of 80
+        protocol: tcp
+        mode: host
     volumes:
       - ${USERDIR}/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
       - ${USERDIR}/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting the container
       - ${USERDIR}/traefik2:/etc/traefik
       - ${USERDIR}/traefik2/rules:/rules # file provider directory
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - CF_API_EMAIL=${CLOUDFLARE_EMAIL}
       - CF_API_KEY=${CLOUDFLARE_API_KEY}
@@ -103,7 +92,7 @@ services:
       ## Services - API
       - "traefik.http.routers.traefik.service=api@internal"
       ## Middlewares
-      - "traefik.http.routers.traefik.middlewares=yourchain@file"
+      - "traefik.http.routers.traefik.middlewares=yourchain-name@file"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -114,14 +103,9 @@ services:
     command: ./traefik-forward-auth --rule.api.action=allow --rule.api.rule="PathPrefix(`/api`)"
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     environment:
       - CLIENT_ID=${GOOGLE_CLIENT_ID}
       - CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -130,11 +114,13 @@ services:
       - INSECURE_COOKIE=false
       - AUTH_HOST=oauth.${DOMAINNAME}
       - URL_PATH=/_oauth
-      - WHITELIST=comma-separated email list
-      - LOG_LEVEL=error
+      - WHITELIST=comma-separated email address list
+      - LOG_LEVEL=warn
       - LOG_FORMAT=text
       - LIFETIME=2592000 # 30 days
       - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
     labels:
       - "traefik.enable=true"
       ## HTTP Routers
@@ -144,7 +130,7 @@ services:
       - "traefik.http.routers.oauth.service=oauth"
       - "traefik.http.services.oauth.loadbalancer.server.port=4181"
       ## Middlewares
-      - "traefik.http.routers.oauth.middlewares=yourchain@file"
+      - "traefik.http.routers.oauth.middlewares=yourchain-name@file"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
 
@@ -155,14 +141,9 @@ services:
     image: organizr/organizr
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ${USERDIR}/organizr:/config
       - /etc/localtime:/etc/localtime:ro
@@ -177,7 +158,7 @@ services:
       - "traefik.http.routers.organizr.entrypoints=https"
       - "traefik.http.routers.organizr.rule=Host(`organizr.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.organizr.middlewares=yourchain@file"
+      - "traefik.http.routers.organizr.middlewares=yourchain-name@file"
       ## Service
       - "traefik.http.routers.organizr.service=organizr"
       - "traefik.http.services.organizr.loadbalancer.server.port=80"
@@ -192,14 +173,13 @@ services:
     container_name: sonarr
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
+    depends_on:
+      - hydra
+      - sabnzbd
+      - deluge
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -213,17 +193,18 @@ services:
       - "traefik.enable=true"
       ## HTTP Routers Auth Bypass
       - "traefik.http.routers.sonarr-noauth.entrypoints=https"
-      - "traefik.http.routers.sonarr-noauth.rule=Headers(`X-Api-Key`, `${SONARR_API_KEY}`) || Query(`apikey`, `${SONARR_API_KEY}`)"
+      - "traefik.http.routers.sonarr-noauth.rule=Host(`sonarr.${DOMAINNAME}`) && (Headers(`X-Api-Key`, `${SONARR_API_KEY}`) || Query(`apikey`, `${SONARR_API_KEY}`))"
       - "traefik.http.routers.sonarr-noauth.priority=100"
-      ## HTTP Routers
+      ## HTTP Routers Auth
       - "traefik.http.routers.sonarr.entrypoints=https"
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAINNAME}`)"
       - "traefik.http.routers.sonarr.priority=99"
       ## TLS and middlewares
-      - "traefik.http.routers.sonarr.middlewares=yourchain@file"
-      ## Service
-      - "traefik.http.routers.sonarr-noauth.service=sonarr"
+      - "traefik.http.routers.sonarr.middlewares=yourchain-name@file"
+      - "traefik.http.routers.sonarr-noauth.middlewares=noauth@file"
+      ## HTTP Services
       - "traefik.http.routers.sonarr.service=sonarr"
+      - "traefik.http.routers.sonarr-noauth.service=sonarr"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
@@ -235,14 +216,13 @@ services:
     container_name: radarr
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
+    depends_on:
+      - hydra
+      - sabnzbd
+      - deluge
     environment:
       - TZ=${TZ}
       - PUID=${PUID}
@@ -256,17 +236,18 @@ services:
       - "traefik.enable=true"
       ## HTTP Routers Auth Bypass
       - "traefik.http.routers.radarr-noauth.entrypoints=https"
-      - "traefik.http.routers.radarr-noauth.rule=Headers(`X-Api-Key`, `${RADARR_API_KEY}`) || Query(`apikey`, `${RADARR_API_KEY}`)"
+      - "traefik.http.routers.radarr-noauth.rule=Host(`radarr.${DOMAINNAME}`) && (Headers(`X-Api-Key`, `${RADARR_API_KEY}`) || Query(`apikey`, `${RADARR_API_KEY}`))"     
       - "traefik.http.routers.radarr-noauth.priority=100"
-      ## HTTP Routers
+      ## HTTP Routers Auth
       - "traefik.http.routers.radarr.entrypoints=https"
       - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAINNAME}`)"
       - "traefik.http.routers.radarr.priority=99"
       ## TLS and middlewares
-      - "traefik.http.routers.radarr.middlewares=yourchain@file"
-      ## Service
-      - "traefik.http.routers.radarr-noauth.service=radarr"
+      - "traefik.http.routers.radarr.middlewares=yourchain-name@file"
+      - "traefik.http.routers.radarr-noauth.middlewares=noauth@file"
+      ## HTTP Services
       - "traefik.http.routers.radarr.service=radarr"
+      - "traefik.http.routers.radarr-noauth.service=radarr"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
@@ -278,14 +259,9 @@ services:
     container_name: sabnzbd
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}:/data
@@ -299,17 +275,18 @@ services:
       - "traefik.enable=true"
       ## HTTP Routers Auth Bypass
       - "traefik.http.routers.sabnzbd-noauth.entrypoints=https"
-      - "traefik.http.routers.sabnzbd-noauth.rule=Query(`apikey`, `${SABNZBD_API_KEY}`)"
+      - "traefik.http.routers.sabnzbd-noauth.rule=Host(`sabnzbd.${DOMAINNAME}`) && (Headers(`X-Api-Key`, `${SABNZBD_API_KEY}`) || Query(`apikey`, `${SABNZBD_API_KEY}`))"
       - "traefik.http.routers.sabnzbd-noauth.priority=100"
       ## HTTP Routers
       - "traefik.http.routers.sabnzbd.entrypoints=https"
       - "traefik.http.routers.sabnzbd.rule=Host(`sabnzbd.${DOMAINNAME}`)"
       - "traefik.http.routers.sabnzbd.priority=99"
       ## TLS and middlewares
-      - "traefik.http.routers.sabnzbd.middlewares=yourchain@file"
+      - "traefik.http.routers.sabnzbd.middlewares=yourchain-name@file"
+      - "traefik.http.routers.sabnzbd-noauth.middlewares=noauth@file"
       ## Service
-      - "traefik.http.routers.sabnzbd-noauth.service=sabnzbd"
       - "traefik.http.routers.sabnzbd.service=sabnzbd"
+      - "traefik.http.routers.sabnzbd-noauth.service=sabnzbd"
       - "traefik.http.services.sabnzbd.loadbalancer.server.port=8080"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
@@ -321,17 +298,14 @@ services:
     restart: unless-stopped
     network_mode: host
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     volumes:
       - ${USERDIR}/deluge:/config
       - ${DATADIR}:/data
       - /etc/localtime:/etc/localtime:ro
     environment:
       - UMASK=022
-      - DELUGE_LOGLEVEL=error #optional
+      - DELUGE_LOGLEVEL=warn #optional
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
@@ -346,14 +320,9 @@ services:
     container_name: hydra
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ${USERDIR}/hydra2:/config
       - ${DATADIR}:/data
@@ -363,21 +332,23 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=022
+      - LOG_LEVEL=warn
     labels:
       - "traefik.enable=true"
       ## HTTP Routers Auth Bypass
       - "traefik.http.routers.hydra-noauth.entrypoints=https"
-      - "traefik.http.routers.hydra-noauth.rule=Query(`apikey`, `${HYDRA_API_KEY}`)"
+      - "traefik.http.routers.hydra-noauth.rule=Host(`hydra.${DOMAINNAME}`) && (Headers(`X-Api-Key`, `${HYDRA_API_KEY}`) || Query(`apikey`, `${HYDRA_API_KEY}`))"
       - "traefik.http.routers.hydra-noauth.priority=100"
       ## HTTP Routers
       - "traefik.http.routers.hydra.entrypoints=https"
       - "traefik.http.routers.hydra.rule=Host(`hydra.${DOMAINNAME}`)"
       - "traefik.http.routers.hydra.priority=99"
       ## TLS and middlewares
-      - "traefik.http.routers.hydra.middlewares=yourchain@file"
+      - "traefik.http.routers.hydra.middlewares=yourchain-name@file"
+      - "traefik.http.routers.hydra-noauth.middlewares=noauth@file"
       ## Service
-      - "traefik.http.routers.hydra-noauth.service=hydra"
       - "traefik.http.routers.hydra.service=hydra"
+      - "traefik.http.routers.hydra-noauth.service=hydra"
       - "traefik.http.services.hydra.loadbalancer.server.port=5076"
       ## Watchtower
       - "com.centurylinklabs.watchtower.enable=true"
@@ -389,14 +360,9 @@ services:
     container_name: jackett
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ${USERDIR}:/config
       - ${DATADIR}:/data
@@ -412,7 +378,7 @@ services:
       - "traefik.http.routers.jackett.entrypoints=https"
       - "traefik.http.routers.jackett.rule=Host(`jackett.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.jackett.middlewares=yourchain@file"
+      - "traefik.http.routers.jackett.middlewares=yourchain-name@file"
       ## Service
       - "traefik.http.routers.jackett.service=jackett"
       - "traefik.http.services.jackett.loadbalancer.server.port=9117"
@@ -426,14 +392,9 @@ services:
     container_name: calibre-web
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
     volumes:
       - ${USERDIR}/calibre_web:/config
       - ${DATADIR}/media/library:/books
@@ -452,7 +413,7 @@ services:
       - "traefik.http.routers.calibre.entrypoints=https"
       - "traefik.http.routers.calibre.rule=Host(`calibre.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.calibre.middlewares=yourchain@file"
+      - "traefik.http.routers.calibre.middlewares=yourchain-name@file"
       ## Service
       - "traefik.http.routers.calibre.service=calibre"
       - "traefik.http.services.calibre.loadbalancer.server.port=8083"
@@ -464,10 +425,7 @@ services:
   tdarr:
     image: haveagitgat/tdarr
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     container_name: tdarr
     restart: unless-stopped
     networks:
@@ -500,7 +458,7 @@ services:
       - "traefik.http.routers.tdarr.entrypoints=https"
       - "traefik.http.routers.tdarr.rule=Host(`tdarr.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.tdarr.middlewares=yourchain@file"
+      - "traefik.http.routers.tdarr.middlewares=yourchain-name@file"
       ## Service
       - "traefik.http.routers.tdarr.service=tdarr"
       - "traefik.http.services.tdarr.loadbalancer.server.port=8265"
@@ -510,10 +468,7 @@ services:
   tdarr_node:
     image: haveagitgat/tdarr_node
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     container_name: tdarr_node
     restart: unless-stopped
     depends_on:
@@ -547,10 +502,7 @@ services:
     container_name: bazarr
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
     volumes:
@@ -573,7 +525,8 @@ services:
       - "traefik.http.routers.bazarr.rule=Host(`bazarr.${DOMAINNAME}`)"
       - "traefik.http.routers.bazarr.priority=99"
       ## TLS and middlewares
-      - "traefik.http.routers.bazarr.middlewares=yourchain@file"
+      - "traefik.http.routers.bazarr.middlewares=yourchain-name@file"
+      - "traefik.http.routers.bazarr-noauth.middlewares=noauth@file"
       ## HTTP Services
       - "traefik.http.routers.bazarr.service=bazarr"
       - "traefik.http.routers.bazarr-noauth.service=bazarr"
@@ -586,30 +539,23 @@ services:
   dozzle:
     image: amir20/dozzle
     container_name: dozzle
+    command: # CLI arguments
+      - --level=warn
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      DOZZLE_LEVEL: info
-      DOZZLE_TAILSIZE: 300
-      DOZZLE_FILTER: "status=running"
-      # DOZZLE_FILTER: "label=log_me" # limits logs displayed to containers with this label
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
     labels:
       - "traefik.enable=true"
       ## HTTP Routers
       - "traefik.http.routers.dozzle.entrypoints=https"
       - "traefik.http.routers.dozzle.rule=Host(`dozzle.${DOMAINNAME}`)"
       ## TLS and middlewares
-      - "traefik.http.routers.dozzle.middlewares=yourchain@file"
+      - "traefik.http.routers.dozzle.middlewares=yourchain-name@file"
       ## HTTP Services
       - "traefik.http.routers.dozzle.service=dozzle"
       - "traefik.http.services.dozzle.loadbalancer.server.port=8080"
@@ -622,20 +568,15 @@ services:
     container_name: certdumper
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     network_mode: none
-    security_opt:
-      - no-new-privileges:true
     # command: --restart-containers container1,container2,container3
     volumes:
       - ${USERDIR}/traefik2/acme:/traefik:ro
       - ${USERDIR}/shared/certs:/output:rw
-      # - /var/run/docker.sock:/var/run/docker.sock:ro # Only needed if restarting containers
+      - /etc/localtime:/etc/localtime:ro
     environment:
-      DOMAIN: ${DOMAINNAME}
+      - DOMAIN=${DOMAINNAME}
 
   # Watchtower - Automatic Update of Containers/Apps
   watchtower:
@@ -643,19 +584,17 @@ services:
     container_name: watchtower
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
     command: --schedule "0 0 6 * * *" --label-enable --cleanup --include-restarting
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - TZ=${TZ}
       - WATCHTOWER_NO_STARTUP_MESSAGE=true
-      - WATCHTOWER_NOTIFICATIONS_LEVEL=error
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=warn
 
   # Vaultwarden - Locally-hosted Bitwarden
   vaultwarden:
@@ -663,10 +602,7 @@ services:
     container_name: vaultwarden
     restart: unless-stopped
     logging:
-      driver: json-file
-      options:
-        max-size: "100k"
-        max-file: "5"
+      driver: local
     networks:
       - t2_proxy
     environment:
@@ -675,9 +611,10 @@ services:
       - PGID=${PGID}
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
-      - DOMAIN=vaultwarden.${DOMAINNAME}
+      # - IP_HEADER=CF-Connecting-IP (add this as a variable in vaultwarden.yourdomain.com/admin instead)
     volumes:
       - /volume1/vaultwarden:/data
+      - /etc/localtime:/etc/localtime:ro
     labels:
       - "traefik.enable=true"
       ## Websocket Routers
@@ -689,7 +626,7 @@ services:
       - "traefik.http.routers.vaultwarden.entrypoints=https"
       - "traefik.http.routers.vaultwarden.service=vaultwarden"
       ## TLS and middlewares
-      - "traefik.http.routers.vaultsock.middlewares=vaultsocket@file"
+      - "traefik.http.routers.vaultsock.middlewares=vaultsocket@file,yourchain-name@file"
       ## HTTP Services
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
       - "traefik.http.services.vaultsock.loadbalancer.server.port=3012"
