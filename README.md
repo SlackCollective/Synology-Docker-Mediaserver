@@ -18,6 +18,7 @@ Containers in use:
       - dozzle
       - cert-dumper
       - traefik
+      - vaultwarden (self-hosted Bitwarden)
 
 Requires docker-compose.yaml and .env file in the same directory.
 
