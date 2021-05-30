@@ -15,11 +15,11 @@ http:
         stsPreload: true
         forceSTSHeader: true
         frameDeny: false #overwritten by customFrameOptionsValue
-        customFrameOptionsValue: "allow-from https:yourdomain" #CSP takes care of this but may be needed for organizr.
+        customFrameOptionsValue: "allow-from https:yourdomain.com" #CSP takes care of this but may be needed for organizr.
         contentTypeNosniff: true
         browserXssFilter: true
         # sslForceHost: true # add sslHost to all of the services
-        # sslHost: "yourdomain"
+        # sslHost: "yourdomain.com"
         referrerPolicy: "same-origin"
         # Setting contentSecurityPolicy is more secure but it can break things. Proper auth will reduce the risk.
         # the below line also breaks some apps due to 'none' - sonarr, radarr, etc.
@@ -46,9 +46,15 @@ http:
         prefixes: /notifications/hub
         forceSlash: false
 
-    yourchain:
+    your-chain-name:
       chain:
         middlewares:
           - securityheaders
           - googleauth
+          - rate-limit
+
+    noauth:
+      chain:
+        middlewares:
+          - securityheaders
           - rate-limit
