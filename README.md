@@ -1,10 +1,9 @@
 # Synology-Docker-Mediaserver
-Working configuration of media services, running Traefik and various other Docker containers on a Synology 218+ NAS
+Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS
 
 Containers in use:
-      - oauth
       - watchtower
-      - nzbhydra2
+      - prowlarr
       - organizr
       - sonarr
       - radarr
@@ -12,16 +11,17 @@ Containers in use:
       - sabnzbd
       - bazarr
       - calibre-web
-      - jackett
+      - calibre
+      - readarr
       - tdarr
       - tdarr-node
       - dozzle
-      - cert-dumper
-      - traefik
+      - cloudflare-ddns
+      - lidarr
       - vaultwarden (self-hosted Bitwarden)
 
 Requires docker-compose.yaml and .env file in the same directory.
 
-oAuth is applied to all containers, with API bypass possible though having created a separate router (see container labels) for oAuth and non-oAuth services.
-
-The "rules" directory must be nested inside your Traefik config folder on the Synology.
+Auth is applied to all containers via Organizr, with API bypass, using swag/nginx/proxy-conf edits for each service as follows:
+        include /config/nginx/proxy-confs/organizr-auth.subfolder.conf;
+        auth_request /auth-4;
