@@ -13,8 +13,6 @@ services:
   swag:
     image: ghcr.io/linuxserver/swag
     container_name: swag
-    logging:
-      driver: local
     networks:
       - lsio
     cap_add:
@@ -43,8 +41,6 @@ services:
   plex:
     image: ghcr.io/linuxserver/plex
     container_name: plex
-    logging:
-      driver: local
     network_mode: host
     devices:
       - /dev/dri:/dev/dri
@@ -53,181 +49,14 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - VERSION=docker
+      - VERSION=latest
       - PLEX_CLAIM=${PLEX_TOKEN}
       - NVIDIA_DRIVER_CAPABILITIES=all
       - NVIDIA_VISIBLE_DEVICES=all
       - gpus=all
     volumes:    
       - ${USERDIR}/plex:/config
-      - ${DATADIR}:/data
-    restart: unless-stopped
-
-  ############################# FRONTENDS
-  # Organizr - Unified Frontend
-  organizr:
-    image: organizr/organizr
-    container_name: organizr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - fpm=true #true or false | using true will provide better performance
-    volumes:
-      - ${USERDIR}/organizr:/config
-    ports:
-      - 88:80
-    restart: unless-stopped
-
-  ############################# PVRS
-  # Sonarr - TV
-  sonarr:
-    image: ghcr.io/linuxserver/sonarr
-    container_name: sonarr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/sonarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 8989:8989
-    restart: unless-stopped
-
-  # Radarr - Movies
-  radarr:
-    image: ghcr.io/linuxserver/radarr
-    container_name: radarr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/radarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 7878:7878
-    restart: unless-stopped
-
-  # Bazarr - subtitle searching and downloading, based on release filename
-  bazarr:
-    image: ghcr.io/linuxserver/bazarr
-    container_name: bazarr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/bazarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 6767:6767
-    restart: unless-stopped
-
-  ############################# BOOKS
-  # Calibre – Content server
-  calibre:
-    image: ghcr.io/linuxserver/calibre
-    container_name: calibre
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - DISABLE_AUTH=true
-      # - CALIBRE_CONFIG_DIRECTORY=${USERDIR}/calibre
-      # - CALIBRE_TEMP_DIR=${USERDIR}/calibre/temp
-      # - CALIBRE_CACHE_DIRECTORY=${USERDIR}/calibre/temp
-      # - PASSWORD= #optional
-      # - CLI_ARGS= #optional
-    volumes:
-      - ${USERDIR}/calibre:/config
-      - ${DATADIR}:/data
-    ports:
-      - 9998:8080
-      - 8081:8081
-    restart: unless-stopped
-    
-  # Calibre-web  – Ebooks and Management
-  calibre-web:
-    image: ghcr.io/linuxserver/calibre-web
-    container_name: calibre-web
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - DOCKER_MODS=linuxserver/calibre-web:calibre #optional
-      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
-      - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
-    volumes:
-      - ${USERDIR}/calibre_web:/config
-      - ${DATADIR}:/data
-    ports:
-      - 8083:8083
-    restart: unless-stopped
-
-  # Readarr  – Library Management
-  readarr:
-    image: ghcr.io/linuxserver/readarr:nightly
-    container_name: readarr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/readarr:/config
-      - ${DATADIR}:/data
-      - ${MEDIADIR}/library:/books
-    ports:
-      - 8787:8787
-    restart: unless-stopped
-
-  ############################# MUSIC
-  # Lidarr  – Music Management
-  lidarr:
-    image: ghcr.io/linuxserver/lidarr
-    container_name: lidarr
-    logging:
-      driver: local
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/lidarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 8686:8686
+      - ${MEDIADIR}:/data/media
     restart: unless-stopped
 
   ############################# INDEXERS
@@ -235,8 +64,6 @@ services:
   prowlarr:
     image: linuxserver/prowlarr:develop
     container_name: prowlarr
-    logging:
-      driver: local
     networks:
       - lsio
     environment:
@@ -255,8 +82,6 @@ services:
   sabnzbd:
     image: ghcr.io/linuxserver/sabnzbd
     container_name: sabnzbd
-    logging:
-      driver: local
     networks:
       - lsio
     environment:
@@ -265,7 +90,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ${USERDIR}/sabnzbd:/config
-      - ${DATADIR}:/data
+      - ${DATADIR}/usenet:/data/usenet
     ports:
       - 8080:8080
       - 9090:9090
@@ -275,8 +100,6 @@ services:
   deluge:
     image: ghcr.io/linuxserver/deluge
     container_name: deluge
-    logging:
-      driver: local
     networks:
       - lsio
     environment:
@@ -286,11 +109,180 @@ services:
       - DELUGE_LOGLEVEL=error #optional
     volumes:
       - ${USERDIR}/deluge:/config
-      - ${DATADIR}:/data
+      - ${DATADIR}/torrents:/data/torrents
     ports:
       - 8112:8112
       - 6881:6881
       - 6881:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+
+  ############################# FRONTENDS
+  # Organizr - Unified Frontend
+  organizr:
+    image: organizr/organizr
+    container_name: organizr
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - fpm=true #true or false | using true will provide better performance
+    volumes:
+      - ${USERDIR}/organizr:/config
+    ports:
+      - 88:80
+    restart: unless-stopped
+
+  ############################# BOOKS
+  # Calibre – Content server
+  calibre:
+    image: ghcr.io/linuxserver/calibre
+    container_name: calibre
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - DISABLE_AUTH=true
+      # - PASSWORD=abc
+      # - CLI_ARGS= #optional
+    volumes:
+      - ${USERDIR}/calibre:/config
+      - ${USERDIR}/calibre/upload:/upload
+      - ${USERDIR}/calibre/plugins:/plugins
+      - ${DATADIR}:/data
+      - ${MEDIADIR}/library:/books
+    ports:
+      - 32776:3389
+      - 9998:8080
+      - 8081:8081
+    restart: unless-stopped
+    
+  # Calibre-web  – Ebooks and Management
+  calibre-web:
+    image: ghcr.io/linuxserver/calibre-web
+    container_name: calibre-web
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - DOCKER_MODS=linuxserver/calibre-web:calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
+      - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
+    volumes:
+      - ${USERDIR}/calibre_web:/config
+      - ${DATADIR}:/data
+      - ${MEDIADIR}/library:/books
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+
+  # Readarr  – Library Management
+  readarr:
+    image: ghcr.io/linuxserver/readarr:nightly
+    container_name: readarr
+    depends_on:
+      - prowlarr
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/readarr:/config
+      - ${DATADIR}:/data
+      - ${MEDIADIR}/library:/books
+    ports:
+      - 8787:8787
+    restart: unless-stopped
+
+  ############################# PVRS
+  # Sonarr - TV
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    depends_on:
+      - sabnzbd
+      - deluge
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/sonarr:/config
+      - ${DATADIR}:/data
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  # Radarr - Movies
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    depends_on:
+      - sabnzbd
+      - deluge
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/radarr:/config
+      - ${DATADIR}:/data
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  ############################# MUSIC
+  # Lidarr  – Music Management
+  lidarr:
+    image: ghcr.io/linuxserver/lidarr
+    container_name: lidarr
+    depends_on:
+      - sabnzbd
+      - deluge
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/lidarr:/config
+      - ${DATADIR}:/data
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+
+  ############################# MEDIA INFO
+  # Bazarr - subtitle searching and downloading, based on release filename
+  bazarr:
+    image: ghcr.io/linuxserver/bazarr
+    container_name: bazarr
+    depends_on:
+      - sonarr
+      - radarr
+    networks:
+      - lsio
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/bazarr:/config
+      - ${MEDIADIR}:/data/media
+    ports:
+      - 6767:6767
     restart: unless-stopped
 
   ############################# SYSTEM MANAGEMENT/MONITORING
@@ -298,8 +290,6 @@ services:
   dozzle:
     image: amir20/dozzle
     container_name: dozzle
-    logging:
-      driver: local
     networks:
       - lsio
     ports:
@@ -321,12 +311,10 @@ services:
   cf-ddns:
     image: oznu/cloudflare-ddns
     container_name: cloudflare-ddns
-    logging:
-      driver: local
     network_mode: host
     environment:
-      - API_KEY=${CLOUDFLARE_API_KEY}
-      - ZONE=${DOMAINNAME}
+      - API_KEY=${API_KEY}
+      - ZONE=${ZONE}
       - PROXIED=false
       - RRTYPE=A
       - DELETE_ON_STOP=false
@@ -338,8 +326,6 @@ services:
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
-    logging:
-      driver: local
     networks:
       - lsio
     environment:
@@ -358,8 +344,6 @@ services:
   tdarr:
     image: haveagitgat/tdarr
     container_name: tdarr
-    logging:
-      driver: local
     networks:
       - lsio
     ports:
@@ -374,7 +358,8 @@ services:
       - ${USERDIR}:/app/server
       - ${USERDIR}/Tdarr/Configs:/app/configs
       - ${USERDIR}/Tdarr/Logs:/app/logs
-      - ${DATADIR}:/data
+      - ${MEDIADIR}:/data/media
+      - ${MEDIADIR}/temp:/data/temp
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -390,8 +375,6 @@ services:
   tdarr_node:
     image: haveagitgat/tdarr_node
     container_name: tdarr_node
-    logging:
-      driver: local
     network_mode: service:tdarr
     devices:
       - /dev/dri:/dev/dri
@@ -401,7 +384,8 @@ services:
       - ${USERDIR}:/app/server
       - ${USERDIR}/Tdarr/Configs:/app/configs
       - ${USERDIR}/Tdarr/Logs:/app/logs
-      - ${DATADIR}:/data
+      - ${MEDIADIR}:/data/media
+      - ${MEDIADIR}/temp:/data/temp
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -421,13 +405,11 @@ services:
   vaultwarden:
     image: vaultwarden/server
     container_name: vaultwarden
-    logging:
-      driver: local
     networks:
       - lsio
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
+      - PUID=${SUDOID}
+      - PGID=${SUDOGRP}
       - TZ=${TZ}
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
