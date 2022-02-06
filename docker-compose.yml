@@ -12,6 +12,8 @@ networks:
 services:
   swag:
     image: ghcr.io/linuxserver/swag
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: swag
     networks:
       - lsio
@@ -36,10 +38,53 @@ services:
       - 89:80
     restart: unless-stopped
 
+  # Gluetun - multipurpose VPN
+  gluetun:
+    image: qmcgaw/private-internet-access
+    mem_limit: 512m
+    mem_reservation: 256m
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    network_mode: bridge
+    ports:
+      # - 8888:8888/tcp # HTTP proxy
+      # - 8388:8388/tcp # Shadowsocks
+      # - 8388:8388/udp # Shadowsocks
+      # - 8000:8000/tcp # Built-in HTTP control server
+# other containers ports
+      - 8112:8112     # deluge webui
+      - 58846:58846   # deluge daemon
+      # - 6881:6881
+      # - 6767:6767     # bazarr
+      # - 8989:8989     # sonarr
+      # - 7878:7878     # radarr
+      # - 8686:8686     # lidarr
+      # - 9696:9696     # prowlarr
+      # - 8787:8787     # readarr
+    volumes:
+      - ${USERDIR}/gluetun:/gluetun
+    environment:
+      - VPNSP=custom
+      - VPN_TYPE=wireguard
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WIREGUARD_INTERFACE=wg0
+      - VPN_ENDPOINT_IP=62.210.139.124
+      - VPN_ENDPOINT_PORT=51820
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
+      - WIREGUARD_ADDRESS=10.103.18.106/32
+    restart: unless-stopped
+
   ############################# MEDIA PLAYERS
   # Plex
   plex:
     image: ghcr.io/linuxserver/plex
+    mem_limit: 1024m
+    mem_reservation: 512m
     container_name: plex
     network_mode: host
     devices:
@@ -63,6 +108,8 @@ services:
   # Prowlarr - Hydra and Jackett combined
   prowlarr:
     image: linuxserver/prowlarr:develop
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: prowlarr
     networks:
       - lsio
@@ -81,6 +128,8 @@ services:
   # SABnzbd - Binary newsgrabber (NZB downloader)
   sabnzbd:
     image: ghcr.io/linuxserver/sabnzbd
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: sabnzbd
     networks:
       - lsio
@@ -99,9 +148,12 @@ services:
   # Deluge - Torrents
   deluge:
     image: ghcr.io/linuxserver/deluge
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: deluge
-    networks:
-      - lsio
+    network_mode: service:gluetun
+    # networks:
+      # - lsio
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -110,17 +162,20 @@ services:
     volumes:
       - ${USERDIR}/deluge:/config
       - ${DATADIR}/torrents:/data/torrents
-    ports:
-      - 8112:8112
-      - 6881:6881
-      - 6881:6881/udp
-      - 58846:58846
+    # ports:
+      # - 8112:8112
+      # - 6881:6881
+      # - 1194:1194
+      # - 6881:6881/udp
+      # - 58846:58846
     restart: unless-stopped
 
   ############################# FRONTENDS
   # Organizr - Unified Frontend
   organizr:
     image: organizr/organizr
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: organizr
     networks:
       - lsio
@@ -139,6 +194,8 @@ services:
   # Calibre – Content server
   calibre:
     image: ghcr.io/linuxserver/calibre
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: calibre
     networks:
       - lsio
@@ -156,7 +213,7 @@ services:
       - ${DATADIR}:/data
       - ${MEDIADIR}/library:/books
     ports:
-      - 32776:3389
+      # - 32776:3389
       - 9998:8080
       - 8081:8081
     restart: unless-stopped
@@ -164,6 +221,8 @@ services:
   # Calibre-web  – Ebooks and Management
   calibre-web:
     image: ghcr.io/linuxserver/calibre-web
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: calibre-web
     networks:
       - lsio
@@ -185,6 +244,8 @@ services:
   # Readarr  – Library Management
   readarr:
     image: ghcr.io/linuxserver/readarr:nightly
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: readarr
     depends_on:
       - prowlarr
@@ -206,10 +267,12 @@ services:
   # Sonarr - TV
   sonarr:
     image: ghcr.io/linuxserver/sonarr
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: sonarr
     depends_on:
       - sabnzbd
-      - deluge
+      # - deluge
     networks:
       - lsio
     environment:
@@ -226,10 +289,12 @@ services:
   # Radarr - Movies
   radarr:
     image: ghcr.io/linuxserver/radarr
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: radarr
     depends_on:
       - sabnzbd
-      - deluge
+      # - deluge
     networks:
       - lsio
     environment:
@@ -247,10 +312,12 @@ services:
   # Lidarr  – Music Management
   lidarr:
     image: ghcr.io/linuxserver/lidarr
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: lidarr
     depends_on:
       - sabnzbd
-      - deluge
+      # - deluge
     networks:
       - lsio
     environment:
@@ -268,6 +335,8 @@ services:
   # Bazarr - subtitle searching and downloading, based on release filename
   bazarr:
     image: ghcr.io/linuxserver/bazarr
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: bazarr
     depends_on:
       - sonarr
@@ -289,6 +358,8 @@ services:
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
     image: amir20/dozzle
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: dozzle
     networks:
       - lsio
@@ -310,6 +381,8 @@ services:
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
     image: oznu/cloudflare-ddns
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: cloudflare-ddns
     network_mode: host
     environment:
@@ -325,6 +398,8 @@ services:
   # Watchtower - Automatic Update of Containers/Apps
   watchtower:
     image: containrrr/watchtower
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: watchtower
     networks:
       - lsio
@@ -343,6 +418,8 @@ services:
   # Video conversion - tdarr
   tdarr:
     image: haveagitgat/tdarr
+    mem_limit: 1024m
+    mem_reservation: 512m
     container_name: tdarr
     networks:
       - lsio
@@ -374,6 +451,8 @@ services:
 
   tdarr_node:
     image: haveagitgat/tdarr_node
+    mem_limit: 1024m
+    mem_reservation: 512m
     container_name: tdarr_node
     network_mode: service:tdarr
     devices:
@@ -404,6 +483,8 @@ services:
   # Vaultarden - Locally-hosted Bitwarden
   vaultwarden:
     image: vaultwarden/server
+    mem_limit: 512m
+    mem_reservation: 256m
     container_name: vaultwarden
     networks:
       - lsio
