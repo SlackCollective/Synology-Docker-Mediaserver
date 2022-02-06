@@ -3,9 +3,11 @@ Working configuration of media services, running Linuxserver Swag for reverse pr
 
 Router ports forwarded to NAS:
 Plex (32400 is default); Deluge (8112); Calibre (8080. 8081, 8083); Http 80 (external) > 89 (internal); Https: 443 (external) > 449 (internal)
+Deluge running through Gluetun (VPN)
 
 Containers in use:
       - watchtower
+      - gluetun
       - prowlarr
       - organizr
       - sonarr
