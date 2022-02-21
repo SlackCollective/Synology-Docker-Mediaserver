@@ -4,8 +4,6 @@ networks:
   lsio:
     name: lsio
     driver: bridge
-  default:
-    driver: bridge
 
 ########################### SERVICES
   # Swag - webserver, reverse proxy
@@ -30,53 +28,12 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${USERDIR}/swag:/config
     ports:
       - 449:443
       - 89:80
-    restart: unless-stopped
-
-  # Gluetun - multipurpose VPN
-  gluetun:
-    image: qmcgaw/private-internet-access
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: gluetun
-    cap_add:
-      - NET_ADMIN
-    network_mode: bridge
-    ports:
-      # - 8888:8888/tcp # HTTP proxy
-      # - 8388:8388/tcp # Shadowsocks
-      # - 8388:8388/udp # Shadowsocks
-      # - 8000:8000/tcp # Built-in HTTP control server
-# other containers ports
-      - 8112:8112     # deluge webui
-      - 58846:58846   # deluge daemon
-      # - 6881:6881
-      # - 6767:6767     # bazarr
-      # - 8989:8989     # sonarr
-      # - 7878:7878     # radarr
-      # - 8686:8686     # lidarr
-      # - 9696:9696     # prowlarr
-      # - 8787:8787     # readarr
-    volumes:
-      - ${USERDIR}/gluetun:/gluetun
-    environment:
-      - VPNSP=custom
-      - VPN_TYPE=wireguard
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - WIREGUARD_INTERFACE=wg0
-      - VPN_ENDPOINT_IP=62.210.139.124
-      - VPN_ENDPOINT_PORT=51820
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
-      - WIREGUARD_ADDRESS=10.103.18.106/32
     restart: unless-stopped
 
   ############################# MEDIA PLAYERS
@@ -86,7 +43,8 @@ services:
     mem_limit: 1024m
     mem_reservation: 512m
     container_name: plex
-    network_mode: host
+    networks:
+      - lsio
     devices:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
@@ -94,14 +52,18 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
+      - TZ=${TZ}
       - VERSION=latest
       - PLEX_CLAIM=${PLEX_TOKEN}
+      - ADVERTISE_IP=http://192.168.1.156:32400/,https://plex.yoururl.com/
       - NVIDIA_DRIVER_CAPABILITIES=all
       - NVIDIA_VISIBLE_DEVICES=all
       - gpus=all
     volumes:    
       - ${USERDIR}/plex:/config
       - ${MEDIADIR}:/data/media
+    ports:
+      - 32400:32400/tcp
     restart: unless-stopped
 
   ############################# INDEXERS
@@ -145,29 +107,45 @@ services:
       - 9090:9090
     restart: unless-stopped  
 
-  # Deluge - Torrents
-  deluge:
-    image: ghcr.io/linuxserver/deluge
+  # Qbittorrent - Torrents with VPN
+  qbittorrentvpn:
+    image: binhex/arch-qbittorrentvpn
     mem_limit: 512m
     mem_reservation: 256m
-    container_name: deluge
-    network_mode: service:gluetun
-    # networks:
-      # - lsio
+    container_name: qbittorrentvpn
+    networks:
+      - lsio
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ${USERDIR}/qbittorrentvpn:/config
+      - ${DATADIR}/torrents:/data/torrents
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 8112:8112
+      # - 8118:8118
     environment:
+      - VPN_ENABLED=yes
+      - VPN_USER=KS2-dcc015f260e6b8108f2f971a08e47cd7
+      - VPN_PASS=uMrGmVI4LN52
+      - VPN_PROV=custom
+      - VPN_CLIENT=openvpn
+      # - VPN_OPTIONS=
+      - STRICT_PORT_FORWARD=no
+      - ENABLE_PRIVOXY=no
+      - LAN_NETWORK=172.17.0.0/24,172.19.0.0/24,192.168.1.0/24
+      - NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1
+      - VPN_INPUT_PORTS=1234
+      - VPN_OUTPUT_PORTS=5678
+      - DEBUG=false
+      - WEBUI_PORT=8112
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DELUGE_LOGLEVEL=error #optional
-    volumes:
-      - ${USERDIR}/deluge:/config
-      - ${DATADIR}/torrents:/data/torrents
-    # ports:
-      # - 8112:8112
-      # - 6881:6881
-      # - 1194:1194
-      # - 6881:6881/udp
-      # - 58846:58846
     restart: unless-stopped
 
   ############################# FRONTENDS
@@ -213,7 +191,6 @@ services:
       - ${DATADIR}:/data
       - ${MEDIADIR}/library:/books
     ports:
-      # - 32776:3389
       - 9998:8080
       - 8081:8081
     restart: unless-stopped
@@ -243,12 +220,10 @@ services:
 
   # Readarr  – Library Management
   readarr:
-    image: ghcr.io/linuxserver/readarr:nightly
+    image: lscr.io/linuxserver/readarr:develop
     mem_limit: 512m
     mem_reservation: 256m
     container_name: readarr
-    depends_on:
-      - prowlarr
     networks:
       - lsio
     environment:
@@ -270,9 +245,6 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     container_name: sonarr
-    depends_on:
-      - sabnzbd
-      # - deluge
     networks:
       - lsio
     environment:
@@ -292,9 +264,6 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     container_name: radarr
-    depends_on:
-      - sabnzbd
-      # - deluge
     networks:
       - lsio
     environment:
@@ -315,9 +284,6 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     container_name: lidarr
-    depends_on:
-      - sabnzbd
-      # - deluge
     networks:
       - lsio
     environment:
@@ -338,9 +304,6 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     container_name: bazarr
-    depends_on:
-      - sonarr
-      - radarr
     networks:
       - lsio
     environment:
@@ -381,10 +344,11 @@ services:
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
     image: oznu/cloudflare-ddns
-    mem_limit: 512m
-    mem_reservation: 256m
+    mem_limit: 256m
+    mem_reservation: 128m
     container_name: cloudflare-ddns
-    network_mode: host
+    networks:
+      - lsio
     environment:
       - API_KEY=${API_KEY}
       - ZONE=${ZONE}
@@ -398,8 +362,8 @@ services:
   # Watchtower - Automatic Update of Containers/Apps
   watchtower:
     image: containrrr/watchtower
-    mem_limit: 512m
-    mem_reservation: 256m
+    mem_limit: 256m
+    mem_reservation: 128m
     container_name: watchtower
     networks:
       - lsio
@@ -415,69 +379,86 @@ services:
     restart: unless-stopped
 
   ############################# MEDIA FILE MANAGEMENT
-  # Video conversion - tdarr
-  tdarr:
-    image: haveagitgat/tdarr
+  # Zip extraction
+  unpackerr:
+    image: cr.hotio.dev/hotio/unpackerr
     mem_limit: 1024m
     mem_reservation: 512m
-    container_name: tdarr
+    container_name: unpackerr
     networks:
       - lsio
-    ports:
-      - 8265:8265
-      - 8266:8266
-      - 8267:8267
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
-    volumes:
-      - ${USERDIR}:/app/server
-      - ${USERDIR}/Tdarr/Configs:/app/configs
-      - ${USERDIR}/Tdarr/Logs:/app/logs
-      - ${MEDIADIR}:/data/media
-      - ${MEDIADIR}/temp:/data/temp
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - serverIP=0.0.0.0
-      - webUIPort=8265
-      - serverPort=8266
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
-      - gpus=all
-    restart: always
-
-  tdarr_node:
-    image: haveagitgat/tdarr_node
-    mem_limit: 1024m
-    mem_reservation: 512m
-    container_name: tdarr_node
-    network_mode: service:tdarr
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      # - UMASK=002
+      # General config
+      # - UN_DEBUG=false
+      # - UN_LOG_FILE=
+      # - UN_LOG_FILES=10
+      # - UN_LOG_FILE_MB=10
+      # - UN_INTERVAL=2m
+      # - UN_START_DELAY=1m
+      # - UN_RETRY_DELAY=5m
+      # - UN_MAX_RETRIES=3
+      # - UN_PARALLEL=1
+      # - UN_FILE_MODE=0644
+      # - UN_DIR_MODE=0755
+      # Sonarr Config
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API}
+      - UN_SONARR_0_PATHS_0=/data/torrents/tv
+      - UN_SONARR_0_PROTOCOLS=torrent
+      - UN_SONARR_0_TIMEOUT=10s
+      - UN_SONARR_0_DELETE_ORIG=false
+      - UN_SONARR_0_DELETE_DELAY=5m
+      # Radarr Config
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API}
+      - UN_RADARR_0_PATHS_0=/data/torrents/movies
+      - UN_RADARR_0_PROTOCOLS=torrent
+      - UN_RADARR_0_TIMEOUT=10s
+      - UN_RADARR_0_DELETE_ORIG=false
+      - UN_RADARR_0_DELETE_DELAY=5m
+      # Lidarr Config
+      - UN_LIDARR_0_URL=http://lidarr:8686
+      - UN_LIDARR_0_API_KEY=${LIDARR_API}
+      - UN_LIDARR_0_PATHS_0=/data/torrents/music
+      - UN_LIDARR_0_PROTOCOLS=torrent
+      - UN_LIDARR_0_TIMEOUT=10s
+      - UN_LIDARR_0_DELETE_ORIG=false
+      - UN_LIDARR_0_DELETE_DELAY=5m
+      # Readarr Config
+      - UN_READARR_0_URL=http://readarr:8787
+      - UN_READARR_0_API_KEY=${READARR_API}
+      - UN_READARR_0_PATHS_0=/data/torrents/books
+      - UN_READARR_0_PROTOCOLS=torrent
+      - UN_READARR_0_TIMEOUT=10s
+      - UN_READARR_0_DELETE_ORIG=false
+      - UN_READARR_0_DELETE_DELAY=5m
+      # Folder Config
+      # - UN_FOLDER_0_PATH=
+      # - UN_FOLDER_0_EXTRACT_PATH=
+      # - UN_FOLDER_0_DELETE_AFTER=10m
+      # - UN_FOLDER_0_DELETE_ORIGINAL=true
+      # - UN_FOLDER_0_DELETE_FILES=false
+      # - UN_FOLDER_0_MOVE_BACK=true
+      # Webhook Config
+      # - UN_WEBHOOK_0_URL=
+      # - UN_WEBHOOK_0_NAME=
+      # - UN_WEBHOOK_0_NICKNAME=Unpackerr
+      # - UN_WEBHOOK_0_CHANNEL=
+      # - UN_WEBHOOK_0_TIMEOUT=
+      # - UN_WEBHOOK_0_SILENT=false
+      # - UN_WEBHOOK_0_IGNORE_SSL=false
+      # - UN_WEBHOOK_0_EXCLUDE=[]
+      # - UN_WEBHOOK_0_EVENTS=[0]
+      # - UN_WEBHOOK_0_TEMPLATE_PATH=
+      # - UN_WEBHOOK_0_CONTENT_TYPE=application/json
     volumes:
-      - ${USERDIR}:/app/server
-      - ${USERDIR}/Tdarr/Configs:/app/configs
-      - ${USERDIR}/Tdarr/Logs:/app/logs
-      - ${MEDIADIR}:/data/media
-      - ${MEDIADIR}/temp:/data/temp
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
-      - gpus=all
-      - nodeID=MainNode
-      - nodeIP=0.0.0.0
-      - nodePort=8267
-      - serverIP=0.0.0.0
-      - serverPort=8266
-    restart: always
+      - ${USERDIR}/unpackerr:/config
+      - ${DATADIR}:/data
+    restart: unless-stopped
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultarden - Locally-hosted Bitwarden
