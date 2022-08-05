@@ -1,20 +1,30 @@
-version: "2.1"
+version: "3.2"
 ########################### NETWORKS
 networks:
-  lsio:
-    name: lsio
+  default:
     driver: bridge
-
-########################### SERVICES
-  # Swag - webserver, reverse proxy
+  lsio:
+    driver: bridge
+    external:
+      name: lsio
 services:
+  ############################# WEBSERVER
+  # Swag - webserver, reverse proxy
   swag:
-    image: ghcr.io/linuxserver/swag
-    mem_limit: 512m
-    mem_reservation: 256m
     container_name: swag
+    image: ghcr.io/linuxserver/swag
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 449:443
+      # - 89:80
+      - 81:81
     cap_add:
       - NET_ADMIN
     environment:
@@ -28,23 +38,288 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip
+      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/swag:/config
-    ports:
-      - 449:443
-      - 89:80
-    restart: unless-stopped
 
-  ############################# MEDIA PLAYERS
-  # Plex
-  plex:
-    image: ghcr.io/linuxserver/plex
-    mem_limit: 1024m
-    mem_reservation: 512m
-    container_name: plex
+  # Cloudflare DDNS - Dynamic DNS Updater
+  cf-ddns:
+    container_name: cloudflare-ddns
+    image: oznu/cloudflare-ddns
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - API_KEY=${API_KEY}
+      - ZONE=${DOMAINNAME}
+      - PROXIED=false
+      - RRTYPE=A
+      - DELETE_ON_STOP=false
+      - DNS_SERVER=1.1.1.1
+      - CRON="@daily"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+
+  ############################# FRONTENDS
+  # Organizr - Unified Frontend
+  organizr:
+    container_name: organizr
+    image: ghcr.io/organizr/organizr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 88:80
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - fpm=true #true or false | using true will provide better performance
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/organizr:/config
+
+  ############################# INDEXERS
+  # Prowlarr - Hydra and Jackett combined
+  prowlarr:
+    container_name: prowlarr
+    image: linuxserver/prowlarr:develop
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 9696:9696
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK=002
+      - ARGS=
+    volumes:
+      - ${USERDIR}/prowlarr:/config:rw
+
+  ############################# DOWNLOADERS
+  # SABnzbd - nzb downloader
+  sabnzbd:
+    container_name: sabnzbd
+    image: ghcr.io/linuxserver/sabnzbd
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8087:8080
+      - 9090:9090
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/sabnzbd:/config
+      - ${DATADIR}/usenet:/data/usenet:rw
+
+  # Deluge - torrent downloader
+  deluge:
+    container_name: deluge
+    image: lscr.io/linuxserver/deluge
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK=022
+      - DELUGE_LOGLEVEL=error #optional
+      - PYTHON_EGG_CACHE=/config/plugins/.python-eggs
+      - LAN_NETWORK=110.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/deluge:/config:rw
+      - ${DATADIR}/torrents:/data/torrents:rw
+      
+  ############################# MEDIA SEARCH/INDEX
+  # Radarr - Movies
+  radarr:
+    container_name: radarr
+    image: ghcr.io/linuxserver/radarr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 7878:7878
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/radarr:/config
+      - ${DATADIR}:/data
+
+  # Sonarr - TV
+  sonarr:
+    container_name: sonarr
+    image: ghcr.io/linuxserver/sonarr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8989:8989
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/sonarr:/config
+      - ${DATADIR}:/data
+
+  # Lidarr – Music
+  lidarr:
+    container_name: lidarr
+    image: ghcr.io/linuxserver/lidarr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8686:8686
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      # - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/lidarr:/config
+      - ${DATADIR}:/data
+
+  # Readarr - Books
+  readarr:
+    container_name: readarr
+    image: lscr.io/linuxserver/readarr:develop
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8787:8787
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/readarr:/config
+      - ${DATADIR}:/data
+      
+  recyclarr:
+    container_name: recyclarr
+    image: ghcr.io/recyclarr/recyclarr
+    restart: unless-stopped
+    init: true
+    networks:
+      - lsio
+    volumes:
+      - ${USERDIR}/recyclarr:/config
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+
+  ############################# MEDIA AUGMENTATION
+  # Bazarr  – Subtitle Management
+  bazarr:
+    container_name: bazarr
+    image: ghcr.io/linuxserver/bazarr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 6767:6767
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/bazarr:/config
+      - ${DATADIR}/media:/data/media
+
+    # Tdarr - Video conversion
+  tdarr:
+    container_name: tdarr
+    image: haveagitgat/tdarr
+    restart: unless-stopped
+    networks:
+      - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8265:8265
+      - 8266:8266
+      - 8267:8267
     devices:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
@@ -53,156 +328,103 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - VERSION=latest
-      - PLEX_CLAIM=${PLEX_TOKEN}
-      - ADVERTISE_IP=http://192.168.1.156:32400/,https://plex.yoururl.com/
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - nodeID=TdarrNode
       - NVIDIA_DRIVER_CAPABILITIES=all
       - NVIDIA_VISIBLE_DEVICES=all
+      - THREADS_WORKER_INIT_TIMEOUT=200000
       - gpus=all
-    volumes:    
-      - ${USERDIR}/plex:/config
-      - ${MEDIADIR}:/data/media
-    ports:
-      - 32400:32400/tcp
-    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}:/app/server
+      - ${USERDIR}/Tdarr/Configs:/app/configs
+      - ${USERDIR}/Tdarr/Logs:/app/logs
+      - ${DATADIR}/media/transcode:/temp
+      - ${DATADIR}/media:/data/media
 
-  ############################# INDEXERS
-  # Prowlarr - Hydra and Jackett combined
-  prowlarr:
-    image: linuxserver/prowlarr:develop
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: prowlarr
-    networks:
-      - lsio
+  ############################# HOME THEATRE
+  plex:
+    container_name: plex
+    image: ghcr.io/linuxserver/plex
+    restart: unless-stopped
+    network_mode: "host" #and if you use this, comment out the port entry
+    # networks:
+      # - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    # ports:
+      # - 32400:32400
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
+      - ARGS=
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      - ALLOWED_NETWORKS=192.168.1.0/24
+      - PLEX_PASS=${PLEX_PASS}
+      - VERSION=docker
     volumes:
-      - ${USERDIR}/prowlarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 9696:9696
-    restart: unless-stopped
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/plex:/config:rw
+      - ${DATADIR}/media:/data/media:rw
+    devices:
+      - /dev/dri:/dev/dri # optional: if Syno has an Intel CPU with quicksync and you want hardware transcoding
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
 
-  ############################# DOWNLOADERS
-  # SABnzbd - Binary newsgrabber (NZB downloader)
-  sabnzbd:
-    image: ghcr.io/linuxserver/sabnzbd
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: sabnzbd
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/sabnzbd:/config
-      - ${DATADIR}/usenet:/data/usenet
-    ports:
-      - 8080:8080
-      - 9090:9090
-    restart: unless-stopped  
-
-  # Qbittorrent - Torrents with VPN
-  qbittorrentvpn:
-    image: binhex/arch-qbittorrentvpn
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: qbittorrentvpn
-    networks:
-      - lsio
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - ${USERDIR}/qbittorrentvpn:/config
-      - ${DATADIR}/torrents:/data/torrents
-    ports:
-      - 6881:6881
-      - 6881:6881/udp
-      - 8112:8112
-      # - 8118:8118
-    environment:
-      - VPN_ENABLED=yes
-      - VPN_USER=KS2-dcc015f260e6b8108f2f971a08e47cd7
-      - VPN_PASS=uMrGmVI4LN52
-      - VPN_PROV=custom
-      - VPN_CLIENT=openvpn
-      # - VPN_OPTIONS=
-      - STRICT_PORT_FORWARD=no
-      - ENABLE_PRIVOXY=no
-      - LAN_NETWORK=172.17.0.0/24,172.19.0.0/24,192.168.1.0/24
-      - NAME_SERVERS=84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1
-      - VPN_INPUT_PORTS=1234
-      - VPN_OUTPUT_PORTS=5678
-      - DEBUG=false
-      - WEBUI_PORT=8112
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    restart: unless-stopped
-
-  ############################# FRONTENDS
-  # Organizr - Unified Frontend
-  organizr:
-    image: organizr/organizr
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: organizr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - fpm=true #true or false | using true will provide better performance
-    volumes:
-      - ${USERDIR}/organizr:/config
-    ports:
-      - 88:80
-    restart: unless-stopped
-
-  ############################# BOOKS
+  ############################# BOOK LIBRARY MANAGEMENT
   # Calibre – Content server
   calibre:
-    image: ghcr.io/linuxserver/calibre
-    mem_limit: 512m
-    mem_reservation: 256m
     container_name: calibre
+    image: ghcr.io/linuxserver/calibre
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8082:8080
+      - 8081:8081
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - DISABLE_AUTH=true
-      # - PASSWORD=abc
-      # - CLI_ARGS= #optional
+      - CALIBRE_CONFIG_DIRECTORY=/config
+      - CALIBRE_CACHE_DIRECTORY=/cache
+      - CALIBRE_TEMP_DIR=/temp
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
-      - ${USERDIR}/calibre/upload:/upload
-      - ${USERDIR}/calibre/plugins:/plugins
+      - ${USERDIR}/calibre/cache:/cache
+      - ${USERDIR}/calibre/temp:/temp
       - ${DATADIR}:/data
-      - ${MEDIADIR}/library:/books
-    ports:
-      - 9998:8080
-      - 8081:8081
-    restart: unless-stopped
     
   # Calibre-web  – Ebooks and Management
   calibre-web:
-    image: ghcr.io/linuxserver/calibre-web
-    mem_limit: 512m
-    mem_reservation: 256m
     container_name: calibre-web
+    image: ghcr.io/linuxserver/calibre-web
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8083:8083
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -211,121 +433,23 @@ services:
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
       - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre_web:/config
       - ${DATADIR}:/data
-      - ${MEDIADIR}/library:/books
-    ports:
-      - 8083:8083
-    restart: unless-stopped
-
-  # Readarr  – Library Management
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: readarr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/readarr:/config
-      - ${DATADIR}:/data
-      - ${MEDIADIR}/library:/books
-    ports:
-      - 8787:8787
-    restart: unless-stopped
-
-  ############################# PVRS
-  # Sonarr - TV
-  sonarr:
-    image: ghcr.io/linuxserver/sonarr
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: sonarr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/sonarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 8989:8989
-    restart: unless-stopped
-
-  # Radarr - Movies
-  radarr:
-    image: ghcr.io/linuxserver/radarr
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: radarr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/radarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 7878:7878
-    restart: unless-stopped
-
-  ############################# MUSIC
-  # Lidarr  – Music Management
-  lidarr:
-    image: ghcr.io/linuxserver/lidarr
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: lidarr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/lidarr:/config
-      - ${DATADIR}:/data
-    ports:
-      - 8686:8686
-    restart: unless-stopped
-
-  ############################# MEDIA INFO
-  # Bazarr - subtitle searching and downloading, based on release filename
-  bazarr:
-    image: ghcr.io/linuxserver/bazarr
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: bazarr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/bazarr:/config
-      - ${MEDIADIR}:/data/media
-    ports:
-      - 6767:6767
-    restart: unless-stopped
 
   ############################# SYSTEM MANAGEMENT/MONITORING
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
-    image: amir20/dozzle
-    mem_limit: 512m
-    mem_reservation: 256m
     container_name: dozzle
+    image: amir20/dozzle
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 9999:8080
     environment:
@@ -338,137 +462,51 @@ services:
       # - DOCKER_HOST=tcp://socket-proxy:2375
       # - DOZZLE_FILTER="label=log_me" # limits logs to containers with this label
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-
-  # Cloudflare DDNS - Dynamic DNS Updater
-  cf-ddns:
-    image: oznu/cloudflare-ddns
-    mem_limit: 256m
-    mem_reservation: 128m
-    container_name: cloudflare-ddns
-    networks:
-      - lsio
-    environment:
-      - API_KEY=${API_KEY}
-      - ZONE=${ZONE}
-      - PROXIED=false
-      - RRTYPE=A
-      - DELETE_ON_STOP=false
-      - DNS_SERVER=1.1.1.1
-      - CRON="@daily"
-    restart: unless-stopped
-    
+      - ${USERDIR}:/data
+   
   # Watchtower - Automatic Update of Containers/Apps
   watchtower:
-    image: containrrr/watchtower
-    mem_limit: 256m
-    mem_reservation: 128m
     container_name: watchtower
+    image: containrrr/watchtower
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
       - WATCHTOWER_NO_STARTUP_MESSAGE=true
       - WATCHTOWER_NOTIFICATIONS_LEVEL=warn
       - WATCHTOWER_INCLUDE_RESTARTING=true
       - WATCHTOWER_POLL_INTERVAL=43200
       - WATCHTOWER_CLEANUP=true
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-
-  ############################# MEDIA FILE MANAGEMENT
-  # Zip extraction
-  unpackerr:
-    image: cr.hotio.dev/hotio/unpackerr
-    mem_limit: 1024m
-    mem_reservation: 512m
-    container_name: unpackerr
-    networks:
-      - lsio
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      # - UMASK=002
-      # General config
-      # - UN_DEBUG=false
-      # - UN_LOG_FILE=
-      # - UN_LOG_FILES=10
-      # - UN_LOG_FILE_MB=10
-      # - UN_INTERVAL=2m
-      # - UN_START_DELAY=1m
-      # - UN_RETRY_DELAY=5m
-      # - UN_MAX_RETRIES=3
-      # - UN_PARALLEL=1
-      # - UN_FILE_MODE=0644
-      # - UN_DIR_MODE=0755
-      # Sonarr Config
-      - UN_SONARR_0_URL=http://sonarr:8989
-      - UN_SONARR_0_API_KEY=${SONARR_API}
-      - UN_SONARR_0_PATHS_0=/data/torrents/tv
-      - UN_SONARR_0_PROTOCOLS=torrent
-      - UN_SONARR_0_TIMEOUT=10s
-      - UN_SONARR_0_DELETE_ORIG=false
-      - UN_SONARR_0_DELETE_DELAY=5m
-      # Radarr Config
-      - UN_RADARR_0_URL=http://radarr:7878
-      - UN_RADARR_0_API_KEY=${RADARR_API}
-      - UN_RADARR_0_PATHS_0=/data/torrents/movies
-      - UN_RADARR_0_PROTOCOLS=torrent
-      - UN_RADARR_0_TIMEOUT=10s
-      - UN_RADARR_0_DELETE_ORIG=false
-      - UN_RADARR_0_DELETE_DELAY=5m
-      # Lidarr Config
-      - UN_LIDARR_0_URL=http://lidarr:8686
-      - UN_LIDARR_0_API_KEY=${LIDARR_API}
-      - UN_LIDARR_0_PATHS_0=/data/torrents/music
-      - UN_LIDARR_0_PROTOCOLS=torrent
-      - UN_LIDARR_0_TIMEOUT=10s
-      - UN_LIDARR_0_DELETE_ORIG=false
-      - UN_LIDARR_0_DELETE_DELAY=5m
-      # Readarr Config
-      - UN_READARR_0_URL=http://readarr:8787
-      - UN_READARR_0_API_KEY=${READARR_API}
-      - UN_READARR_0_PATHS_0=/data/torrents/books
-      - UN_READARR_0_PROTOCOLS=torrent
-      - UN_READARR_0_TIMEOUT=10s
-      - UN_READARR_0_DELETE_ORIG=false
-      - UN_READARR_0_DELETE_DELAY=5m
-      # Folder Config
-      # - UN_FOLDER_0_PATH=
-      # - UN_FOLDER_0_EXTRACT_PATH=
-      # - UN_FOLDER_0_DELETE_AFTER=10m
-      # - UN_FOLDER_0_DELETE_ORIGINAL=true
-      # - UN_FOLDER_0_DELETE_FILES=false
-      # - UN_FOLDER_0_MOVE_BACK=true
-      # Webhook Config
-      # - UN_WEBHOOK_0_URL=
-      # - UN_WEBHOOK_0_NAME=
-      # - UN_WEBHOOK_0_NICKNAME=Unpackerr
-      # - UN_WEBHOOK_0_CHANNEL=
-      # - UN_WEBHOOK_0_TIMEOUT=
-      # - UN_WEBHOOK_0_SILENT=false
-      # - UN_WEBHOOK_0_IGNORE_SSL=false
-      # - UN_WEBHOOK_0_EXCLUDE=[]
-      # - UN_WEBHOOK_0_EVENTS=[0]
-      # - UN_WEBHOOK_0_TEMPLATE_PATH=
-      # - UN_WEBHOOK_0_CONTENT_TYPE=application/json
-    volumes:
-      - ${USERDIR}/unpackerr:/config
-      - ${DATADIR}:/data
-    restart: unless-stopped
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultarden - Locally-hosted Bitwarden
-  vaultwarden:
+  bitwarden:
+    container_name: bitwarden
     image: vaultwarden/server
-    mem_limit: 512m
-    mem_reservation: 256m
-    container_name: vaultwarden
+    restart: unless-stopped
     networks:
       - lsio
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8269:80
     environment:
       - PUID=${SUDOID}
       - PGID=${SUDOGRP}
@@ -476,5 +514,5 @@ services:
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
     volumes:
+      - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
-    restart: unless-stopped
