@@ -2,7 +2,7 @@
 Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS.
 
 Router ports forwarded to NAS:
-Plex (32400 is default); Http 80 (external) > 89 (internal); Https: 443 (external) > 449 (internal)
+Plex (32400 is default); Http 81 (external) > 81 (internal, only needed if running Swag dashboard); Https: 443 (external) > 449 (internal)
 
 Containers in use:
       - watchtower
@@ -10,7 +10,7 @@ Containers in use:
       - organizr
       - sonarr
       - radarr
-      - qbittorrentvpn
+      - deluge
       - sabnzbd
       - bazarr
       - calibre-web
@@ -19,6 +19,7 @@ Containers in use:
       - dozzle
       - cloudflare-ddns
       - lidarr
+      - recyclarr
       - vaultwarden (self-hosted Bitwarden)
 
 Requires docker-compose.yaml and .env file in the same directory.
