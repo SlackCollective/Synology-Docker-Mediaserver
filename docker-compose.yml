@@ -23,7 +23,7 @@ services:
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 449:443
-      # - 89:80
+      - 89:80
       - 81:81
     cap_add:
       - NET_ADMIN
@@ -41,7 +41,6 @@ services:
       - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/swag:/config
 
   # Cloudflare DDNS - Dynamic DNS Updater
@@ -59,6 +58,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
+      - TZ=${TZ}
       - API_KEY=${API_KEY}
       - ZONE=${DOMAINNAME}
       - PROXIED=false
@@ -66,8 +66,6 @@ services:
       - DELETE_ON_STOP=false
       - DNS_SERVER=1.1.1.1
       - CRON="@daily"
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
 
   ############################# FRONTENDS
   # Organizr - Unified Frontend
@@ -90,7 +88,6 @@ services:
       - TZ=${TZ}
       - fpm=true #true or false | using true will provide better performance
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/organizr:/config
 
   ############################# INDEXERS
@@ -113,7 +110,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
-      - ARGS=
+      # - ARGS=
     volumes:
       - ${USERDIR}/prowlarr:/config:rw
 
@@ -131,14 +128,13 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8087:8080
+      - 8087:8087
       - 9090:9090
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
 
@@ -168,7 +164,6 @@ services:
       - PYTHON_EGG_CACHE=/config/plugins/.python-eggs
       - LAN_NETWORK=110.0.0.0/8,172.16.0.0/12,192.168.0.0/16
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/deluge:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
       
@@ -192,7 +187,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
 
@@ -215,7 +209,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
 
@@ -239,7 +232,6 @@ services:
       - TZ=${TZ}
       # - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
 
@@ -262,7 +254,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/readarr:/config
       - ${DATADIR}:/data
       
@@ -300,7 +291,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
 
@@ -338,7 +328,6 @@ services:
       - THREADS_WORKER_INIT_TIMEOUT=200000
       - gpus=all
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}:/app/server
       - ${USERDIR}/Tdarr/Configs:/app/configs
       - ${USERDIR}/Tdarr/Logs:/app/logs
@@ -365,14 +354,13 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
-      - ARGS=
+      # - ARGS=
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
       - ALLOWED_NETWORKS=192.168.1.0/24
       - PLEX_PASS=${PLEX_PASS}
       - VERSION=docker
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
     devices:
@@ -405,7 +393,6 @@ services:
       - CALIBRE_CACHE_DIRECTORY=/cache
       - CALIBRE_TEMP_DIR=/temp
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
       - ${USERDIR}/calibre/cache:/cache
       - ${USERDIR}/calibre/temp:/temp
@@ -433,7 +420,6 @@ services:
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
       - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre_web:/config
       - ${DATADIR}:/data
 
@@ -462,7 +448,6 @@ services:
       # - DOCKER_HOST=tcp://socket-proxy:2375
       # - DOZZLE_FILTER="label=log_me" # limits logs to containers with this label
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ${USERDIR}:/data
    
@@ -478,6 +463,8 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8088:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -489,7 +476,6 @@ services:
       - WATCHTOWER_POLL_INTERVAL=43200
       - WATCHTOWER_CLEANUP=true
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
 
   ############################# SECURITY/PASSWORD MANAGEMENT
@@ -514,5 +500,4 @@ services:
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
