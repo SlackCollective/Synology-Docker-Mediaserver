@@ -109,7 +109,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
       # - ARGS=
     volumes:
       - ${USERDIR}/prowlarr:/config:rw
@@ -159,7 +158,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - DELUGE_LOGLEVEL=error #optional
       - PYTHON_EGG_CACHE=/config/plugins/.python-eggs
       - LAN_NETWORK=110.0.0.0/8,172.16.0.0/12,192.168.0.0/16
@@ -262,13 +260,12 @@ services:
     image: ghcr.io/recyclarr/recyclarr
     restart: unless-stopped
     init: true
+    user: ${PUID}:${PGID}
     networks:
       - lsio
     volumes:
       - ${USERDIR}/recyclarr:/config
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
       - TZ=${TZ}
 
   ############################# MEDIA AUGMENTATION
@@ -353,7 +350,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
       # - ARGS=
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
@@ -445,7 +441,6 @@ services:
       - DOZZLE_LEVEL=error
       - DOZZLE_TAILSIZE=300
       - DOZZLE_FILTER="status=running"
-      # - DOCKER_HOST=tcp://socket-proxy:2375
       # - DOZZLE_FILTER="label=log_me" # limits logs to containers with this label
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -469,7 +464,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - WATCHTOWER_NO_STARTUP_MESSAGE=true
       - WATCHTOWER_NOTIFICATIONS_LEVEL=warn
       - WATCHTOWER_INCLUDE_RESTARTING=true
