@@ -24,7 +24,7 @@ Containers in use:
 
 Requires docker-compose.yaml and .env file in the same directory.
 
-Auth is applied to all containers via Organizr, with API bypass, using swag/nginx/proxy-conf edits for each service as follows:
+Auth is applied to all containers via Organizr, with API bypass, using swag/nginx/proxy-conf edits for each service (in the location block) as follows. To allow API access (e.g. for NZB360), don't add this to the API block.
 
         include /config/nginx/proxy-confs/organizr-auth.subfolder.conf;
         auth_request /auth-4;
