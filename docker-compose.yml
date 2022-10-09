@@ -1,12 +1,17 @@
-version: "3.2"
 ########################### NETWORKS
 networks:
   default:
     driver: bridge
   lsio:
     driver: bridge
-    external:
-      name: lsio
+    name: lsio
+    ipam:
+      driver: default
+      config:
+      -
+        subnet: 172.21.199.0/24
+        gateway: 192.168.1.1
+
 services:
   ############################# WEBSERVER
   # Swag - webserver, reverse proxy
@@ -15,7 +20,8 @@ services:
     image: ghcr.io/linuxserver/swag
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.100
     logging:
       driver: json-file
       options:
@@ -38,18 +44,19 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip
+      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${USERDIR}/swag:/config
-
+    
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
     container_name: cloudflare-ddns
     image: oznu/cloudflare-ddns
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.101
     logging:
       driver: json-file
       options:
@@ -74,7 +81,8 @@ services:
     image: ghcr.io/organizr/organizr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.102
     logging:
       driver: json-file
       options:
@@ -97,7 +105,8 @@ services:
     image: linuxserver/prowlarr:develop
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.103
     logging:
       driver: json-file
       options:
@@ -120,15 +129,15 @@ services:
     image: ghcr.io/linuxserver/sabnzbd
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.104
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8087:8087
-      - 9090:9090
+      - 8080:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -137,34 +146,32 @@ services:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
 
-  # Deluge - torrent downloader
-  deluge:
-    container_name: deluge
-    image: lscr.io/linuxserver/deluge
+  # qBittorrent - torrent downloader
+  qbittorrent:
+    container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.105
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    ports:
-      - 8112:8112
-      - 6881:6881
-      - 6881:6881/udp
-      - 58846:58846
+    ports: #re-enable all if dropping VPN
+      - 9091:9091
+      - 6882:6882
+      - 6882:6882/udp
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DELUGE_LOGLEVEL=error #optional
-      - PYTHON_EGG_CACHE=/config/plugins/.python-eggs
-      - LAN_NETWORK=110.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      - WEBUI_PORT=9091
     volumes:
-      - ${USERDIR}/deluge:/config:rw
+      - ${USERDIR}:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
-      
+
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
   radarr:
@@ -172,7 +179,8 @@ services:
     image: ghcr.io/linuxserver/radarr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.106
     logging:
       driver: json-file
       options:
@@ -194,7 +202,8 @@ services:
     image: ghcr.io/linuxserver/sonarr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.107
     logging:
       driver: json-file
       options:
@@ -216,7 +225,8 @@ services:
     image: ghcr.io/linuxserver/lidarr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.108
     logging:
       driver: json-file
       options:
@@ -228,7 +238,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
     volumes:
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
@@ -239,7 +248,8 @@ services:
     image: lscr.io/linuxserver/readarr:develop
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.109
     logging:
       driver: json-file
       options:
@@ -254,7 +264,9 @@ services:
     volumes:
       - ${USERDIR}/readarr:/config
       - ${DATADIR}:/data
-      
+
+  ############################# MEDIA AUGMENTATION
+  # Recyclarr  – Auto-update download profiles for Sonarr and Radarr      
   recyclarr:
     container_name: recyclarr
     image: ghcr.io/recyclarr/recyclarr
@@ -262,20 +274,21 @@ services:
     init: true
     user: ${PUID}:${PGID}
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.110
     volumes:
       - ${USERDIR}/recyclarr:/config
     environment:
       - TZ=${TZ}
 
-  ############################# MEDIA AUGMENTATION
   # Bazarr  – Subtitle Management
   bazarr:
     container_name: bazarr
     image: ghcr.io/linuxserver/bazarr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.111
     logging:
       driver: json-file
       options:
@@ -297,7 +310,8 @@ services:
     image: haveagitgat/tdarr
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.112
     logging:
       driver: json-file
       options:
@@ -328,7 +342,7 @@ services:
       - ${USERDIR}:/app/server
       - ${USERDIR}/Tdarr/Configs:/app/configs
       - ${USERDIR}/Tdarr/Logs:/app/logs
-      - ${DATADIR}/media/transcode:/temp
+      - ${DATADIR}/media/Transcode:/temp
       - ${DATADIR}/media:/data/media
 
   ############################# HOME THEATRE
@@ -338,7 +352,8 @@ services:
     restart: unless-stopped
     network_mode: "host" #and if you use this, comment out the port entry
     # networks:
-      # - lsio
+      # lsio:
+        # ipv4_address: 172.21.199.113
     logging:
       driver: json-file
       options:
@@ -353,16 +368,39 @@ services:
       # - ARGS=
       - PLEX_CLAIM=${PLEX_CLAIM}
       - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
-      - ALLOWED_NETWORKS=192.168.1.0/24
+      - ALLOWED_NETWORKS=192.168.1.100/255.255.255.0
       - PLEX_PASS=${PLEX_PASS}
       - VERSION=docker
     volumes:
       - ${USERDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
     devices:
-      - /dev/dri:/dev/dri # optional: if Syno has an Intel CPU with quicksync and you want hardware transcoding
+      - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
+      
+  ############################# PLEX MONITORING
+  tautulli:
+    container_name: tautulli
+    image: lscr.io/linuxserver/tautulli:latest
+    restart: unless-stopped
+    networks:
+      lsio:
+        ipv4_address: 172.21.199.114
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    ports:
+      - 8181:8181
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/tautulli:/config
+      - ${USERDIR}/plex:/plex
 
   ############################# BOOK LIBRARY MANAGEMENT
   # Calibre – Content server
@@ -371,7 +409,8 @@ services:
     image: ghcr.io/linuxserver/calibre
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.115
     logging:
       driver: json-file
       options:
@@ -400,7 +439,8 @@ services:
     image: ghcr.io/linuxserver/calibre-web
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.116
     logging:
       driver: json-file
       options:
@@ -412,7 +452,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DOCKER_MODS=linuxserver/calibre-web:calibre #optional
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
       - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
     volumes:
@@ -426,7 +466,8 @@ services:
     image: amir20/dozzle
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.117
     logging:
       driver: json-file
       options:
@@ -451,15 +492,17 @@ services:
     container_name: watchtower
     image: containrrr/watchtower
     restart: unless-stopped
-    networks:
-      - lsio
+    network_mode: "host" #and if you use this, comment out the port entry
+    # networks:
+      # lsio:
+        # ipv4_address: 172.21.199.118
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    ports:
-      - 8088:8080
+    # ports:
+      # - 8088:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -479,7 +522,8 @@ services:
     image: vaultwarden/server
     restart: unless-stopped
     networks:
-      - lsio
+      lsio:
+        ipv4_address: 172.21.199.119
     logging:
       driver: json-file
       options:
