@@ -5,12 +5,13 @@ Router ports forwarded to NAS:
 Plex (32400 is default); Http 81 (external) > 81 (internal, only needed if running Swag dashboard); Https: 443 (external) > 449 (internal)
 
 Containers in use:
+      - swag
       - watchtower
       - prowlarr
       - organizr
       - sonarr
       - radarr
-      - deluge
+      - qbittorrent
       - sabnzbd
       - bazarr
       - calibre-web
@@ -20,6 +21,9 @@ Containers in use:
       - cloudflare-ddns
       - lidarr
       - recyclarr
+      - plex
+      - tautulli
+      - tdarr
       - vaultwarden (self-hosted Bitwarden)
 
 Requires docker-compose.yaml and .env file in the same directory.
