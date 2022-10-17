@@ -17,7 +17,7 @@ services:
   # Swag - webserver, reverse proxy
   swag:
     container_name: swag
-    image: ghcr.io/linuxserver/swag
+    image: lscr.io/linuxserver/swag:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -102,7 +102,7 @@ services:
   # Prowlarr - Hydra and Jackett combined
   prowlarr:
     container_name: prowlarr
-    image: linuxserver/prowlarr:develop
+    image: lscr.io/linuxserver/prowlarr:develop
     restart: unless-stopped
     networks:
       lsio:
@@ -118,15 +118,14 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - ARGS=
     volumes:
-      - ${USERDIR}/prowlarr:/config:rw
+      - ${USERDIR}/prowlarr:/config
 
   ############################# DOWNLOADERS
   # SABnzbd - nzb downloader
   sabnzbd:
     container_name: sabnzbd
-    image: ghcr.io/linuxserver/sabnzbd
+    image: lscr.io/linuxserver/sabnzbd:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -144,12 +143,12 @@ services:
       - TZ=${TZ}
     volumes:
       - ${USERDIR}/sabnzbd:/config
-      - ${DATADIR}/usenet:/data/usenet:rw
+      - ${DATADIR}/usenet:/data/usenet
 
   # qBittorrent - torrent downloader
   qbittorrent:
     container_name: qbittorrent
-    image: lscr.io/linuxserver/qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -169,14 +168,14 @@ services:
       - TZ=${TZ}
       - WEBUI_PORT=9091
     volumes:
-      - ${USERDIR}:/config:rw
-      - ${DATADIR}/torrents:/data/torrents:rw
+      - ${USERDIR}:/config
+      - ${DATADIR}/torrents:/data/torrents
 
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
   radarr:
     container_name: radarr
-    image: ghcr.io/linuxserver/radarr
+    image: lscr.io/linuxserver/radarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -199,7 +198,7 @@ services:
   # Sonarr - TV
   sonarr:
     container_name: sonarr
-    image: ghcr.io/linuxserver/sonarr
+    image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -222,7 +221,7 @@ services:
   # Lidarr – Music
   lidarr:
     container_name: lidarr
-    image: ghcr.io/linuxserver/lidarr
+    image: lscr.io/linuxserver/lidarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -284,7 +283,7 @@ services:
   # Bazarr  – Subtitle Management
   bazarr:
     container_name: bazarr
-    image: ghcr.io/linuxserver/bazarr
+    image: lscr.io/linuxserver/bazarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -304,7 +303,7 @@ services:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
 
-    # Tdarr - Video conversion
+  # Tdarr - Video conversion
   tdarr:
     container_name: tdarr
     image: haveagitgat/tdarr
@@ -348,7 +347,7 @@ services:
   ############################# HOME THEATRE
   plex:
     container_name: plex
-    image: ghcr.io/linuxserver/plex
+    image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
     network_mode: "host" #and if you use this, comment out the port entry
     # networks:
@@ -365,15 +364,12 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - ARGS=
       - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
-      - ALLOWED_NETWORKS=192.168.1.100/255.255.255.0
-      - PLEX_PASS=${PLEX_PASS}
+      - ADVERTISE_IP=http://your_lan_plex_ip:32400
       - VERSION=docker
     volumes:
-      - ${USERDIR}/plex:/config:rw
-      - ${DATADIR}/media:/data/media:rw
+      - ${USERDIR}/plex:/config
+      - ${DATADIR}/media:/data/media
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
@@ -406,7 +402,9 @@ services:
   # Calibre – Content server
   calibre:
     container_name: calibre
-    image: ghcr.io/linuxserver/calibre
+    image: lscr.io/linuxserver/calibre:latest
+    security_opt:
+      - seccomp:unconfined #optional
     restart: unless-stopped
     networks:
       lsio:
@@ -424,19 +422,14 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - DISABLE_AUTH=true
-      - CALIBRE_CONFIG_DIRECTORY=/config
-      - CALIBRE_CACHE_DIRECTORY=/cache
-      - CALIBRE_TEMP_DIR=/temp
     volumes:
       - ${USERDIR}/calibre:/config
-      - ${USERDIR}/calibre/cache:/cache
-      - ${USERDIR}/calibre/temp:/temp
       - ${DATADIR}:/data
     
   # Calibre-web  – Ebooks and Management
   calibre-web:
     container_name: calibre-web
-    image: ghcr.io/linuxserver/calibre-web
+    image: lscr.io/linuxserver/calibre-web:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -454,7 +447,7 @@ services:
       - TZ=${TZ}
       - DOCKER_MODS=linuxserver/mods:universal-calibre
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
-      - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
+      # - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
     volumes:
       - ${USERDIR}/calibre_web:/config
       - ${DATADIR}:/data
