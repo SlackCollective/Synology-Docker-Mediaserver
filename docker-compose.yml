@@ -3,15 +3,13 @@ networks:
   default:
     driver: bridge
   lsio:
-    driver: bridge
-    name: lsio
     ipam:
       driver: default
       config:
-      -
-        subnet: 172.21.199.0/24
-        gateway: 192.168.1.1
-
+        - subnet: "172.21.0.0/16"
+    driver: bridge
+    name: lsio
+        
 services:
   ############################# WEBSERVER
   # Swag - webserver, reverse proxy
@@ -21,7 +19,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.100
+        ipv4_address: 172.21.2.3
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     logging:
       driver: json-file
       options:
@@ -44,8 +44,9 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
-      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip
+      # - DOCKER_MODS=linuxserver/mods:swag-maxmind
+      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${USERDIR}/swag:/config
     
@@ -56,7 +57,7 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.101
+        ipv4_address: 172.21.2.8
     logging:
       driver: json-file
       options:
@@ -82,14 +83,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.102
+        ipv4_address: 172.21.2.10
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 88:80
+      # - 88:80
+      - "0.0.0.0::80"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -106,14 +108,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.103
+        ipv4_address: 172.21.2.11
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 9696:9696
+      # - 9696:9696
+      - "0.0.0.0::9696"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -129,14 +132,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.104
+        ipv4_address: 172.21.2.12
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8080:8080
+      # - 9998:8080
+      - "0.0.0.0::8080"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -152,23 +156,24 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.105
+        ipv4_address: 172.21.2.13
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    ports: #re-enable all if dropping VPN
-      - 9091:9091
-      - 6882:6882
-      - 6882:6882/udp
+    ports:
+      # - 9091:9091
+      # - 65118:65118
+      - "0.0.0.0::9091"
+      - "0.0.0.0::65118"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=9091
     volumes:
-      - ${USERDIR}:/config
+      - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
 
   ############################# MEDIA SEARCH/INDEX
@@ -179,14 +184,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.106
+        ipv4_address: 172.21.2.14
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 7878:7878
+      # - 7878:7878
+      - "0.0.0.0::7878"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -202,14 +208,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.107
+        ipv4_address: 172.21.2.15
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8989:8989
+      # - 8989:8989
+      - "0.0.0.0::8989"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -225,14 +232,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.108
+        ipv4_address: 172.21.2.16
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8686:8686
+      # - 8686:8686
+      - "0.0.0.0::8686"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -241,45 +249,6 @@ services:
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
 
-  # Readarr - Books
-  readarr:
-    container_name: readarr
-    image: lscr.io/linuxserver/readarr:develop
-    restart: unless-stopped
-    networks:
-      lsio:
-        ipv4_address: 172.21.199.109
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    ports:
-      - 8787:8787
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${USERDIR}/readarr:/config
-      - ${DATADIR}:/data
-
-  ############################# MEDIA AUGMENTATION
-  # Recyclarr  – Auto-update download profiles for Sonarr and Radarr      
-  recyclarr:
-    container_name: recyclarr
-    image: ghcr.io/recyclarr/recyclarr
-    restart: unless-stopped
-    init: true
-    user: ${PUID}:${PGID}
-    networks:
-      lsio:
-        ipv4_address: 172.21.199.110
-    volumes:
-      - ${USERDIR}/recyclarr:/config
-    environment:
-      - TZ=${TZ}
-
   # Bazarr  – Subtitle Management
   bazarr:
     container_name: bazarr
@@ -287,14 +256,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.111
+        ipv4_address: 172.21.2.17
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 6767:6767
+      # - 6767:6767
+      - "0.0.0.0::6767"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -310,16 +280,18 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.112
+        ipv4_address: 172.21.2.18
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8265:8265
-      - 8266:8266
-      - 8267:8267
+      # - 8265:8265
+      # - 8266:8266
+      # - 8267:8267
+      - "0.0.0.0::8265"
+      - "0.0.0.0::8266"
     devices:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
@@ -349,23 +321,20 @@ services:
     container_name: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #and if you use this, comment out the port entry
-    # networks:
-      # lsio:
-        # ipv4_address: 172.21.199.113
+    network_mode: "host" #if you use this, comment out the port entry
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    # ports:
-      # - 32400:32400
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=http://your_lan_plex_ip:32400
+      # - ALLOWED_NETWORKS=192.168.1.0/24,172.16.0.0/12
+      # - ADVERTISE_IP=http://192.168.1.156:32400
+      # - PLEX_PASS=${PLEX_PASS}
       - VERSION=docker
     volumes:
       - ${USERDIR}/plex:/config
@@ -374,7 +343,7 @@ services:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-      
+
   ############################# PLEX MONITORING
   tautulli:
     container_name: tautulli
@@ -382,14 +351,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.114
+        ipv4_address: 172.21.2.20
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8181:8181
+      # - 8181:8181
+      - "0.0.0.0::8181"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -408,15 +378,21 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.115
+        ipv4_address: 172.21.2.21
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8082:8080
-      - 8081:8081
+      # - 7080:8080
+      # - 8081:8081
+      - "0.0.0.0::8080"
+      - "0.0.0.0::8081"
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -425,31 +401,30 @@ services:
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
-    
-  # Calibre-web  – Ebooks and Management
-  calibre-web:
-    container_name: calibre-web
-    image: lscr.io/linuxserver/calibre-web:latest
+
+  # Readarr - Books
+  readarr:
+    container_name: readarr
+    image: lscr.io/linuxserver/readarr:develop
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.116
+        ipv4_address: 172.21.2.22
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8083:8083
+      # - 8787:8787
+      - "0.0.0.0::8787"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DOCKER_MODS=linuxserver/mods:universal-calibre
-      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #necessary for Google oAuth
-      # - OAUTHLIB_INSECURE_TRANSPORT=1 #necessary for Google oAuth
     volumes:
-      - ${USERDIR}/calibre_web:/config
+      - ${USERDIR}/readarr:/config
+      - ${USERDIR}/calibre:/calibre
       - ${DATADIR}:/data
 
   ############################# SYSTEM MANAGEMENT/MONITORING
@@ -460,14 +435,15 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.117
+        ipv4_address: 172.21.2.23
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 9999:8080
+      # - 9999:8080
+      - "0.0.0.0::8080"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -479,34 +455,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${USERDIR}:/data
-   
-  # Watchtower - Automatic Update of Containers/Apps
-  watchtower:
-    container_name: watchtower
-    image: containrrr/watchtower
-    restart: unless-stopped
-    network_mode: "host" #and if you use this, comment out the port entry
-    # networks:
-      # lsio:
-        # ipv4_address: 172.21.199.118
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    # ports:
-      # - 8088:8080
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - WATCHTOWER_NO_STARTUP_MESSAGE=true
-      - WATCHTOWER_NOTIFICATIONS_LEVEL=warn
-      - WATCHTOWER_INCLUDE_RESTARTING=true
-      - WATCHTOWER_POLL_INTERVAL=43200
-      - WATCHTOWER_CLEANUP=true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultarden - Locally-hosted Bitwarden
@@ -516,17 +464,18 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.199.119
+        ipv4_address: 172.21.2.24
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      - 8269:80
+      # - 8269:80
+      - "0.0.0.0::80"
     environment:
-      - PUID=${SUDOID}
-      - PGID=${SUDOGRP}
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TZ}
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
