@@ -6,7 +6,6 @@ Plex (32400 is default); Http 81 (external) > 81 (internal, only needed if runni
 
 Containers in use:
       - swag
-      - watchtower
       - prowlarr
       - organizr
       - sonarr
@@ -14,13 +13,11 @@ Containers in use:
       - qbittorrent
       - sabnzbd
       - bazarr
-      - calibre-web
       - calibre
       - readarr
       - dozzle
       - cloudflare-ddns
       - lidarr
-      - recyclarr
       - plex
       - tautulli
       - tdarr
