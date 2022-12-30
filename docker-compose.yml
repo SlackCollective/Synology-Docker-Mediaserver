@@ -90,8 +90,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 88:80
-      - "0.0.0.0::80"
+      - 88:80
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -115,8 +114,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 9696:9696
-      - "0.0.0.0::9696"
+      - 9696:9696
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -139,8 +137,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 9998:8080
-      - "0.0.0.0::8080"
+      - 9998:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -163,10 +160,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 9091:9091
-      # - 65118:65118
-      - "0.0.0.0::9091"
-      - "0.0.0.0::65118"
+      - 9091:9091
+      - 65118:65118
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -191,8 +186,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 7878:7878
-      - "0.0.0.0::7878"
+      - 7878:7878
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -215,8 +209,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8989:8989
-      - "0.0.0.0::8989"
+      - 8989:8989
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -239,8 +232,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8686:8686
-      - "0.0.0.0::8686"
+      - 8686:8686
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -249,7 +241,7 @@ services:
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
 
-  # Bazarr  – Subtitle Management
+  # Bazarr – Subtitle Management
   bazarr:
     container_name: bazarr
     image: lscr.io/linuxserver/bazarr:latest
@@ -263,8 +255,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 6767:6767
-      - "0.0.0.0::6767"
+      - 6767:6767
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -287,11 +278,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8265:8265
-      # - 8266:8266
-      # - 8267:8267
-      - "0.0.0.0::8265"
-      - "0.0.0.0::8266"
+      - 8265:8265
+      - 8266:8266
     devices:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
@@ -358,8 +346,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8181:8181
-      - "0.0.0.0::8181"
+      - 8181:8181
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -385,10 +372,8 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 7080:8080
-      # - 8081:8081
-      - "0.0.0.0::8080"
-      - "0.0.0.0::8081"
+      - 7080:8080
+      - 8081:8081
     devices:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
@@ -398,6 +383,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - DISABLE_AUTH=true
+      # - PASSWORD=
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
@@ -416,8 +402,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8787:8787
-      - "0.0.0.0::8787"
+      - 8787:8787
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -442,8 +427,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 9999:8080
-      - "0.0.0.0::8080"
+      - 9999:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -471,8 +455,7 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
-      # - 8269:80
-      - "0.0.0.0::80"
+      - 8269:80
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
