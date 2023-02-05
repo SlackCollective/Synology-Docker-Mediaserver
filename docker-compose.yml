@@ -9,7 +9,7 @@ networks:
         - subnet: "172.21.0.0/16"
     driver: bridge
     name: lsio
-        
+
 services:
   ############################# WEBSERVER
   # Swag - webserver, reverse proxy
@@ -22,11 +22,8 @@ services:
         ipv4_address: 172.21.2.3
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
+    cap_add:
+      - NET_ADMIN
     ports:
       - 449:443
       - 89:80
@@ -44,9 +41,10 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip
-      # - DOCKER_MODS=linuxserver/mods:swag-maxmind
-      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
+      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/swag:/config
     
@@ -58,11 +56,6 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.8
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -84,11 +77,6 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.10
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 88:80
     environment:
@@ -108,17 +96,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.11
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 9696:9696
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/prowlarr:/config
 
@@ -131,17 +116,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.12
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 9998:8080
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet
@@ -154,11 +136,6 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.13
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 9091:9091
       - 65118:65118
@@ -167,6 +144,8 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=9091
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
@@ -180,17 +159,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.14
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 7878:7878
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -198,22 +174,19 @@ services:
   # Sonarr - TV
   sonarr:
     container_name: sonarr
-    image: lscr.io/linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:develop
     restart: unless-stopped
     networks:
       lsio:
         ipv4_address: 172.21.2.15
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8989:8989
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
@@ -226,17 +199,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.16
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8686:8686
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
@@ -249,20 +219,31 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.17
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 6767:6767
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
+
+  # Recyclarr – Update Radarr/Sonarr quality Profiles
+  recyclarr:
+    container_name: recyclarr
+    image: ghcr.io/recyclarr/recyclarr
+    restart: unless-stopped
+    networks:
+      lsio:
+        ipv4_address: 172.21.2.26
+    user: 1056:100
+    volumes:
+      - ${USERDIR}/recyclarr:/config
+    environment:
+      - TZ=${TZ}
 
   # Tdarr - Video conversion
   tdarr:
@@ -272,18 +253,13 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.18
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8265:8265
       - 8266:8266
     devices:
       - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      # - /dev/dri/card0:/dev/dri/card0
+      # - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -310,27 +286,21 @@ services:
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
     network_mode: "host" #if you use this, comment out the port entry
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - PLEX_CLAIM=${PLEX_CLAIM}
-      # - ALLOWED_NETWORKS=192.168.1.0/24,172.16.0.0/12
-      # - ADVERTISE_IP=http://192.168.1.156:32400
-      # - PLEX_PASS=${PLEX_PASS}
       - VERSION=docker
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/plex:/config
       - ${DATADIR}/media:/data/media
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      # - /dev/dri/card0:/dev/dri/card0
+      # - /dev/dri/renderD128:/dev/dri/renderD128
 
   ############################# PLEX MONITORING
   tautulli:
@@ -340,17 +310,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.20
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8181:8181
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/tautulli:/config
       - ${USERDIR}/plex:/plex
@@ -366,24 +333,20 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.21
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 7080:8080
       - 8081:8081
     devices:
       - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
+      # - /dev/dri/card0:/dev/dri/card0
+      # - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - DISABLE_AUTH=true
-      # - PASSWORD=
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
@@ -396,17 +359,14 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.22
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8787:8787
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
+      - UMASK=022
     volumes:
       - ${USERDIR}/readarr:/config
       - ${USERDIR}/calibre:/calibre
@@ -421,11 +381,6 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.23
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 9999:8080
     environment:
@@ -435,10 +390,8 @@ services:
       - DOZZLE_LEVEL=error
       - DOZZLE_TAILSIZE=300
       - DOZZLE_FILTER="status=running"
-      # - DOZZLE_FILTER="label=log_me" # limits logs to containers with this label
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${USERDIR}:/data
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultarden - Locally-hosted Bitwarden
@@ -449,11 +402,6 @@ services:
     networks:
       lsio:
         ipv4_address: 172.21.2.24
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     ports:
       - 8269:80
     environment:
