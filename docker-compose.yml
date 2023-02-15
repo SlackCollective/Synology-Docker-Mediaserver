@@ -7,7 +7,7 @@ networks:
       driver: default
       config:
         - subnet: "172.21.0.0/16"
-    driver: bridge
+        - gateway: "172.21.0.1"
     name: lsio
 
 services:
@@ -26,8 +26,8 @@ services:
       - NET_ADMIN
     ports:
       - 449:443
-      - 89:80
-      - 81:81
+      # - 89:80
+      # - 81:81
     cap_add:
       - NET_ADMIN
     environment:
@@ -174,7 +174,7 @@ services:
   # Sonarr - TV
   sonarr:
     container_name: sonarr
-    image: lscr.io/linuxserver/sonarr:develop
+    image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -258,8 +258,6 @@ services:
       - 8266:8266
     devices:
       - /dev/dri:/dev/dri
-      # - /dev/dri/card0:/dev/dri/card0
-      # - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -285,7 +283,7 @@ services:
     container_name: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #if you use this, comment out the port entry
+    network_mode: "host" #if you use this, comment out any port entries
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -299,8 +297,6 @@ services:
       - ${DATADIR}/media:/data/media
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
-      # - /dev/dri/card0:/dev/dri/card0
-      # - /dev/dri/renderD128:/dev/dri/renderD128
 
   ############################# PLEX MONITORING
   tautulli:
@@ -338,8 +334,6 @@ services:
       - 8081:8081
     devices:
       - /dev/dri:/dev/dri
-      # - /dev/dri/card0:/dev/dri/card0
-      # - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
