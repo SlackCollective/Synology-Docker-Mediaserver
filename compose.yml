@@ -47,7 +47,7 @@ services:
       - UMASK=022
     volumes:
       - ${USERDIR}/swag:/config
-    
+
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
     container_name: cloudflare-ddns
@@ -55,7 +55,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.8
+        ipv4_address: 172.21.2.5
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -76,7 +78,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.10
+        ipv4_address: 172.21.2.6
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 88:80
     environment:
@@ -95,7 +99,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.11
+        ipv4_address: 172.21.2.7
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9696:9696
     environment:
@@ -115,7 +121,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.12
+        ipv4_address: 172.21.2.8
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9998:8080
     environment:
@@ -124,9 +132,10 @@ services:
       - TZ=${TZ}
       - HAS_IPV6=false
       - UMASK=022
+      - DOCKER_MODS=linuxserver/mods:sabnzbd-par2cmdline-turbo
     volumes:
       - ${USERDIR}/sabnzbd:/config
-      - ${DATADIR}/usenet:/data/usenet
+      - ${DATADIR}/usenet:/data/usenet:rw
 
   # qBittorrent - torrent downloader
   qbittorrent:
@@ -135,7 +144,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.13
+        ipv4_address: 172.21.2.9
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9091:9091
       - 65118:65118
@@ -158,7 +169,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.14
+        ipv4_address: 172.21.2.10
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 7878:7878
     environment:
@@ -178,7 +191,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.15
+        ipv4_address: 172.21.2.11
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8989:8989
     environment:
@@ -198,7 +213,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.16
+        ipv4_address: 172.21.2.12
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8686:8686
     environment:
@@ -207,6 +224,7 @@ services:
       - TZ=${TZ}
       - HAS_IPV6=false
       - UMASK=022
+      - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
     volumes:
       - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
@@ -218,7 +236,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.17
+        ipv4_address: 172.21.2.13
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 6767:6767
     environment:
@@ -238,8 +258,10 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.26
-    user: 1056:100
+        ipv4_address: 172.21.2.14
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    user: 1056:65547
     volumes:
       - ${USERDIR}/recyclarr:/config
     environment:
@@ -252,12 +274,16 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.18
+        ipv4_address: 172.21.2.15
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8265:8265
       - 8266:8266
     devices:
       - /dev/dri:/dev/dri
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -283,7 +309,12 @@ services:
     container_name: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #if you use this, comment out any port entries
+    # networks:
+      # lsio:
+        # ipv4_address: 172.21.2.16
+    network_mode: "host" #if you use this, comment networks and port entry
+    # ports:
+      # - 32400:32400
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -297,7 +328,9 @@ services:
       - ${DATADIR}/media:/data/media
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
-
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      
   ############################# PLEX MONITORING
   tautulli:
     container_name: tautulli
@@ -305,7 +338,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.20
+        ipv4_address: 172.21.2.17
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8181:8181
     environment:
@@ -328,12 +363,16 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.21
+        ipv4_address: 172.21.2.18
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 7080:8080
       - 8081:8081
     devices:
       - /dev/dri:/dev/dri
+      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -352,7 +391,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.22
+        ipv4_address: 172.21.2.19
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8787:8787
     environment:
@@ -374,7 +415,9 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.23
+        ipv4_address: 172.21.2.20
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9999:8080
     environment:
@@ -388,14 +431,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   ############################# SECURITY/PASSWORD MANAGEMENT
-  # Vaultarden - Locally-hosted Bitwarden
+  # Vaultwarden - Locally-hosted Bitwarden
   bitwarden:
     container_name: bitwarden
     image: vaultwarden/server
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.24
+        ipv4_address: 172.21.2.21
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8269:80
     environment:
