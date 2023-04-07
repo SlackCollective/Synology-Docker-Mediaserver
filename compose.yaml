@@ -44,7 +44,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/swag:/config
 
@@ -109,7 +109,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/prowlarr:/config
 
@@ -131,7 +131,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
       - DOCKER_MODS=linuxserver/mods:sabnzbd-par2cmdline-turbo
     volumes:
       - ${USERDIR}/sabnzbd:/config
@@ -156,7 +156,7 @@ services:
       - TZ=${TZ}
       - WEBUI_PORT=9091
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
@@ -179,7 +179,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -201,7 +201,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
@@ -223,7 +223,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
       - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
     volumes:
       - ${USERDIR}/lidarr:/config
@@ -246,7 +246,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
@@ -322,7 +322,7 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
       - VERSION=docker
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/plex:/config
       - ${DATADIR}/media:/data/media
@@ -330,7 +330,7 @@ services:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-      
+
   ############################# PLEX MONITORING
   tautulli:
     container_name: tautulli
@@ -348,7 +348,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/tautulli:/config
       - ${USERDIR}/plex:/plex
@@ -379,7 +379,7 @@ services:
       - TZ=${TZ}
       - DISABLE_AUTH=true
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
@@ -401,10 +401,10 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=022
+      - UMASK=002
     volumes:
       - ${USERDIR}/readarr:/config
-      - ${USERDIR}/calibre:/calibre
+      # - ${USERDIR}/calibre:/calibre
       - ${DATADIR}:/data
 
   ############################# SYSTEM MANAGEMENT/MONITORING
