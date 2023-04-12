@@ -7,7 +7,7 @@ networks:
       driver: default
       config:
         - subnet: "172.21.0.0/16"
-        - gateway: "172.21.0.1"
+          gateway: "172.21.0.1"
     name: lsio
 
 services:
@@ -27,7 +27,6 @@ services:
     ports:
       - 449:443
       # - 89:80
-      # - 81:81
     cap_add:
       - NET_ADMIN
     environment:
@@ -41,8 +40,9 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
-      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip
+      # - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
+      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
       - UMASK=002
     volumes:
@@ -261,7 +261,7 @@ services:
         ipv4_address: 172.21.2.14
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
-    user: 1056:65547
+    user: 1085:100
     volumes:
       - ${USERDIR}/recyclarr:/config
     environment:
