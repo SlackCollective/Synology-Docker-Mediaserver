@@ -26,8 +26,6 @@ services:
     ports:
       - 449:443
       # - 89:80
-    cap_add:
-      - NET_ADMIN
     labels: 
       - autoheal=true
     healthcheck:
