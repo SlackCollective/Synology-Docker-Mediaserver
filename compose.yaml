@@ -19,7 +19,6 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.3
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     cap_add:
@@ -29,6 +28,14 @@ services:
       # - 89:80
     cap_add:
       - NET_ADMIN
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -44,7 +51,6 @@ services:
       # - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
       # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/swag:/config
 
@@ -55,9 +61,16 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.5
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -78,11 +91,18 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.6
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 88:80
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -99,17 +119,28 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.7
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9696:9696
+    labels: 
+      - autoheal="true"
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:9696 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3    
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/prowlarr:/config
 
@@ -121,17 +152,23 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.8
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9998:8080
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs 127.0.0.1:8080 > /dev/null || exit 1
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
       - DOCKER_MODS=linuxserver/mods:sabnzbd-par2cmdline-turbo
     volumes:
       - ${USERDIR}/sabnzbd:/config
@@ -144,19 +181,25 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.9
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9091:9091
       - 65118:65118
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=9091
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
@@ -169,17 +212,30 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.10
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 7878:7878
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:7878 > /dev/null || exit 1
+      start_period: 20s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    entrypoint:
+      - /init
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -191,42 +247,32 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.11
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8989:8989
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8989 || exit 1
+      start_period: 90s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    entrypoint:
+      - /init
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/sonarr:/config
-      - ${DATADIR}:/data
-
-  # Lidarr – Music
-  lidarr:
-    container_name: lidarr
-    image: lscr.io/linuxserver/lidarr:latest
-    restart: unless-stopped
-    networks:
-      lsio:
-        ipv4_address: 172.21.2.12
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    ports:
-      - 8686:8686
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - HAS_IPV6=false
-      - UMASK=002
-      - DOCKER_MODS=linuxserver/mods:lidarr-flac2mp3
-    volumes:
-      - ${USERDIR}/lidarr:/config
       - ${DATADIR}:/data
 
   # Bazarr – Subtitle Management
@@ -234,38 +280,35 @@ services:
     container_name: bazarr
     image: lscr.io/linuxserver/bazarr:latest
     restart: unless-stopped
+    mem_limit: 300M
+    mem_reservation: 250M
     networks:
       lsio:
-        ipv4_address: 172.21.2.13
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 6767:6767
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:6767 > /dev/null || exit 1
+      start_period: 60s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      sonarr:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
-
-  # Recyclarr – Update Radarr/Sonarr quality Profiles
-  recyclarr:
-    container_name: recyclarr
-    image: ghcr.io/recyclarr/recyclarr
-    restart: unless-stopped
-    networks:
-      lsio:
-        ipv4_address: 172.21.2.14
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    user: 1085:100
-    volumes:
-      - ${USERDIR}/recyclarr:/config
-    environment:
-      - TZ=${TZ}
 
   # Tdarr - Video conversion
   tdarr:
@@ -274,7 +317,6 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.15
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
@@ -284,6 +326,14 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -309,12 +359,15 @@ services:
     container_name: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    # networks:
-      # lsio:
-        # ipv4_address: 172.21.2.16
     network_mode: "host" #if you use this, comment networks and port entry
-    # ports:
-      # - 32400:32400
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -322,7 +375,6 @@ services:
       - PLEX_CLAIM=${PLEX_CLAIM}
       - VERSION=docker
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/plex:/config
       - ${DATADIR}/media:/data/media
@@ -338,17 +390,26 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.17
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8181:8181
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs http://127.0.0.1:8181 || exit 1
+      start_period: 90s
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      plex:
+        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/tautulli:/config
       - ${USERDIR}/plex:/plex
@@ -363,7 +424,6 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.18
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
@@ -373,39 +433,24 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
+    labels: 
+      - autoheal=true
+    healthcheck:
+      test: curl -fSs https://google.com || exit 1
+      start_period: 90s
+      timeout: 10s
+      interval: 5s
+      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - DISABLE_AUTH=true
       - HAS_IPV6=false
-      - UMASK=002
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
-
-  # Readarr - Books
-  readarr:
-    container_name: readarr
-    image: lscr.io/linuxserver/readarr:develop
-    restart: unless-stopped
-    networks:
-      lsio:
-        ipv4_address: 172.21.2.19
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    ports:
-      - 8787:8787
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - HAS_IPV6=false
-      - UMASK=002
-    volumes:
-      - ${USERDIR}/readarr:/config
-      # - ${USERDIR}/calibre:/calibre
-      - ${DATADIR}:/data
+      - ${DATADIR}/media/books/imports:/imports
 
   ############################# SYSTEM MANAGEMENT/MONITORING
   # Dozzle - Real-time Docker Log Viewer
@@ -415,11 +460,16 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.20
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9999:8080
+    healthcheck:
+      test: [ "CMD", "/dozzle", "healthcheck" ]
+      interval: 3s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -427,6 +477,23 @@ services:
       - DOZZLE_LEVEL=error
       - DOZZLE_TAILSIZE=300
       - DOZZLE_FILTER="status=running"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Autoheal - restore containers with issues
+  autoheal:
+    container_name: autoheal
+    image: willfarrell/autoheal
+    restart: unless-stopped
+    networks:
+      lsio:
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      # - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -438,16 +505,22 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-        ipv4_address: 172.21.2.21
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8269:80
+      - 3012:3012
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
       - ADMIN_TOKEN=${VAULTWARDEN_TOKEN}
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_FROM=${CLOUDFLARE_EMAIL}
+      - SMTP_PORT=587
+      - SMTP_SECURITY=starttls
+      - SMTP_USERNAME=${CLOUDFLARE_EMAIL}
+      - SMTP_PASSWORD=${GOOGPASS}
     volumes:
       - ${VAULTDIR}:/data
