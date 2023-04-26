@@ -2,7 +2,7 @@
 Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS.
 
 Router ports forwarded to NAS:
-Plex (32400 is default); Http 81 (external) > 81 (internal, only needed if running Swag dashboard and accessing via LAN IP); Https: 443 (external) > 449 (internal)
+Plex (32400 is default); Https: 443 (external) > 449 (internal)
 
 Containers in use:
       - swag
@@ -14,10 +14,8 @@ Containers in use:
       - sabnzbd
       - bazarr
       - calibre
-      - readarr
       - dozzle
       - cloudflare-ddns
-      - lidarr
       - plex
       - tautulli
       - tdarr
