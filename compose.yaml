@@ -26,8 +26,6 @@ services:
     ports:
       - 449:443
       # - 89:80
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -61,8 +59,6 @@ services:
       lsio:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -93,8 +89,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 88:80
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -121,8 +115,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9696:9696
-    labels: 
-      - autoheal="true"
     healthcheck:
       test: curl -fSs http://127.0.0.1:9696 > /dev/null || exit 1
       start_period: 20s
@@ -154,8 +146,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9998:8080
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs 127.0.0.1:8080 > /dev/null || exit 1
       start_period: 20s
@@ -184,8 +174,6 @@ services:
     ports:
       - 9091:9091
       - 65118:65118
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -214,8 +202,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 7878:7878
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs http://127.0.0.1:7878 > /dev/null || exit 1
       start_period: 20s
@@ -249,8 +235,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8989:8989
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs http://127.0.0.1:8989 || exit 1
       start_period: 90s
@@ -286,8 +270,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 6767:6767
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs http://127.0.0.1:6767 > /dev/null || exit 1
       start_period: 60s
@@ -324,8 +306,6 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -358,8 +338,6 @@ services:
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
     network_mode: "host" #if you use this, comment networks and port entry
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -392,8 +370,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8181:8181
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs http://127.0.0.1:8181 || exit 1
       start_period: 90s
@@ -431,8 +407,6 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-    labels: 
-      - autoheal=true
     healthcheck:
       test: curl -fSs https://google.com || exit 1
       start_period: 90s
@@ -475,23 +449,6 @@ services:
       - DOZZLE_LEVEL=error
       - DOZZLE_TAILSIZE=300
       - DOZZLE_FILTER="status=running"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  # Autoheal - restore containers with issues
-  autoheal:
-    container_name: autoheal
-    image: willfarrell/autoheal
-    restart: unless-stopped
-    networks:
-      lsio:
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      # - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
