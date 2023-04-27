@@ -26,12 +26,6 @@ services:
     ports:
       - 449:443
       # - 89:80
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -59,12 +53,6 @@ services:
       lsio:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -89,12 +77,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 88:80
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -115,17 +97,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9696:9696
-    healthcheck:
-      test: curl -fSs http://127.0.0.1:9696 > /dev/null || exit 1
-      start_period: 20s
-      timeout: 5s
-      interval: 5s
-      retries: 3    
-    depends_on:
-      sabnzbd:
-        condition: service_healthy
-      qbittorrent:
-        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -146,12 +117,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9998:8080
-    healthcheck:
-      test: curl -fSs 127.0.0.1:8080 > /dev/null || exit 1
-      start_period: 20s
-      interval: 5s
-      timeout: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -174,12 +139,6 @@ services:
     ports:
       - 9091:9091
       - 65118:65118
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -202,19 +161,8 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 7878:7878
-    healthcheck:
-      test: curl -fSs http://127.0.0.1:7878 > /dev/null || exit 1
-      start_period: 20s
-      timeout: 5s
-      interval: 5s
-      retries: 3
     entrypoint:
       - /init
-    depends_on:
-      sabnzbd:
-        condition: service_healthy
-      qbittorrent:
-        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -235,19 +183,8 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8989:8989
-    healthcheck:
-      test: curl -fSs http://127.0.0.1:8989 || exit 1
-      start_period: 90s
-      timeout: 5s
-      interval: 5s
-      retries: 3
     entrypoint:
       - /init
-    depends_on:
-      sabnzbd:
-        condition: service_healthy
-      qbittorrent:
-        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -270,17 +207,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 6767:6767
-    healthcheck:
-      test: curl -fSs http://127.0.0.1:6767 > /dev/null || exit 1
-      start_period: 60s
-      timeout: 5s
-      interval: 5s
-      retries: 3
-    depends_on:
-      sonarr:
-        condition: service_healthy
-      radarr:
-        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -306,12 +232,6 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -338,12 +258,6 @@ services:
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
     network_mode: "host" #if you use this, comment networks and port entry
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -370,15 +284,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 8181:8181
-    healthcheck:
-      test: curl -fSs http://127.0.0.1:8181 || exit 1
-      start_period: 90s
-      timeout: 5s
-      interval: 5s
-      retries: 3
-    depends_on:
-      plex:
-        condition: service_healthy
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -407,12 +312,6 @@ services:
       - /dev/dri:/dev/dri
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-    healthcheck:
-      test: curl -fSs https://google.com || exit 1
-      start_period: 90s
-      timeout: 10s
-      interval: 5s
-      retries: 3
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -436,12 +335,6 @@ services:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
       - 9999:8080
-    healthcheck:
-      test: [ "CMD", "/dozzle", "healthcheck" ]
-      interval: 3s
-      timeout: 30s
-      retries: 5
-      start_period: 30s
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
