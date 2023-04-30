@@ -38,7 +38,7 @@ services:
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip
-      # - DOCKER_MODS=linuxserver/mods:swag-dashboard|linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
+      # - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
     volumes:
@@ -195,26 +195,26 @@ services:
       - ${DATADIR}:/data
 
   # Bazarr – Subtitle Management
-  bazarr:
-    container_name: bazarr
-    image: lscr.io/linuxserver/bazarr:latest
-    restart: unless-stopped
-    mem_limit: 300M
-    mem_reservation: 250M
-    networks:
-      lsio:
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    ports:
-      - 6767:6767
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - HAS_IPV6=false
-    volumes:
-      - ${USERDIR}/bazarr:/config
-      - ${DATADIR}/media:/data/media
+  # bazarr:
+    # container_name: bazarr
+    # image: lscr.io/linuxserver/bazarr:latest
+    # restart: unless-stopped
+    # mem_limit: 300M
+    # mem_reservation: 250M
+    # networks:
+      # lsio:
+    # sysctls:
+      # - net.ipv6.conf.all.disable_ipv6=1
+    # ports:
+      # - 6767:6767
+    # environment:
+      # - PUID=${PUID}
+      # - PGID=${PGID}
+      # - TZ=${TZ}
+      # - HAS_IPV6=false
+    # volumes:
+      # - ${USERDIR}/bazarr:/config
+      # - ${DATADIR}/media:/data/media
 
   # Tdarr - Video conversion
   tdarr:
@@ -268,6 +268,7 @@ services:
     volumes:
       - ${USERDIR}/plex:/config
       - ${DATADIR}/media:/data/media
+      - ${DATADIR}/media/Transcode:/tmp
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
@@ -298,6 +299,7 @@ services:
   calibre:
     container_name: calibre
     image: lscr.io/linuxserver/calibre:latest
+    # privileged: true
     security_opt:
       - seccomp:unconfined #optional
     restart: unless-stopped
@@ -318,10 +320,14 @@ services:
       - TZ=${TZ}
       - DISABLE_AUTH=true
       - HAS_IPV6=false
+      - XDG_RUNTIME_DIR=/tmp/runtime-abc
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
       - ${DATADIR}/media/books/imports:/imports
+      - ${USERDIR}/calibre:/var/lib/docker
+      - ${USERDIR}/calibre/tmp/runtime-abc:/tmp/runtime-abc
+      - /tmp/.X11-unix:/tmp/.X11-unix
 
   ############################# SYSTEM MANAGEMENT/MONITORING
   # Dozzle - Real-time Docker Log Viewer
