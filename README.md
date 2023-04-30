@@ -12,7 +12,7 @@ Containers in use:
       - radarr
       - qbittorrent
       - sabnzbd
-      - bazarr
+      - bazarr (currently not in use, commented out)
       - calibre
       - dozzle
       - cloudflare-ddns
