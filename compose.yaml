@@ -37,8 +37,7 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip
-      # - DOCKER_MODS=linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
+      # - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
     volumes:
@@ -89,7 +88,7 @@ services:
   # Prowlarr - Hydra and Jackett combined
   prowlarr:
     container_name: prowlarr
-    image: lscr.io/linuxserver/prowlarr:develop
+    image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -325,9 +324,8 @@ services:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
       - ${DATADIR}/media/books/imports:/imports
-      - ${USERDIR}/calibre:/var/lib/docker
       - ${USERDIR}/calibre/tmp/runtime-abc:/tmp/runtime-abc
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
   ############################# SYSTEM MANAGEMENT/MONITORING
   # Dozzle - Real-time Docker Log Viewer
