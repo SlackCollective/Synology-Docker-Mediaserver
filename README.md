@@ -12,18 +12,19 @@ Containers in use:
       - radarr
       - qbittorrent
       - sabnzbd
-      - bazarr (currently not in use, commented out)
+      - bazarr
       - calibre
       - dozzle
       - cloudflare-ddns
       - plex
       - tautulli
       - tdarr
+      - notifiarr
       - vaultwarden (self-hosted Bitwarden)
 
 Requires docker-compose.yaml and .env file in the same directory.
 
-Auth is applied to all containers via Organizr, with API bypass, using swag/nginx/proxy-conf edits for each service (in the location block) as follows. To allow API access (e.g. for NZB360), don't add this to the API block.
+Auth is applied to containers via Organizr, with API bypass, using swag/nginx/proxy-conf edits for each service (in the location block) as follows. To allow API access (e.g. for NZB360), don't add this to the API block.
 
         include /config/nginx/proxy-confs/organizr-auth.subfolder.conf; #applicable even if using subdomains rather than subfolders
         auth_request /auth-4; #auth-4 is a particular user role, you might want to use a different one
