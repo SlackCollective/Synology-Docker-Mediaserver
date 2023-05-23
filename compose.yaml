@@ -25,7 +25,7 @@ services:
       - NET_ADMIN
     ports:
       - 449:443
-      # - 89:80
+      - 89:80
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -42,6 +42,13 @@ services:
       - HAS_IPV6=false
     volumes:
       - ${USERDIR}/swag:/config
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
@@ -63,6 +70,13 @@ services:
       - DELETE_ON_STOP=false
       - DNS_SERVER=1.1.1.1
       - CRON="@daily"
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# FRONTENDS
   # Organizr - Unified Frontend
@@ -83,11 +97,19 @@ services:
       - fpm=true #true or false | using true will provide better performance
     volumes:
       - ${USERDIR}/organizr:/config
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# INDEXERS
   # Prowlarr - Hydra and Jackett combined
   prowlarr:
     container_name: prowlarr
+    hostname: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
     networks:
@@ -103,11 +125,19 @@ services:
       - HAS_IPV6=false
     volumes:
       - ${USERDIR}/prowlarr:/config
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# DOWNLOADERS
   # SABnzbd - nzb downloader
   sabnzbd:
     container_name: sabnzbd
+    hostname: sabnzbd
     image: lscr.io/linuxserver/sabnzbd:latest
     restart: unless-stopped
     networks:
@@ -125,10 +155,18 @@ services:
     volumes:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   # qBittorrent - torrent downloader
   qbittorrent:
     container_name: qbittorrent
+    hostname: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     networks:
@@ -136,6 +174,7 @@ services:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
+      - 9997:8080
       - 9091:9091
       - 65118:65118
     environment:
@@ -147,11 +186,19 @@ services:
     volumes:
       - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
   radarr:
     container_name: radarr
+    hostname: radarr
     image: lscr.io/linuxserver/radarr:latest
     restart: unless-stopped
     networks:
@@ -170,10 +217,18 @@ services:
     volumes:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   # Sonarr - TV
   sonarr:
     container_name: sonarr
+    hostname: sonarr
     image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
     networks:
@@ -192,28 +247,43 @@ services:
     volumes:
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   # Bazarr – Subtitle Management
-  # bazarr:
-    # container_name: bazarr
-    # image: lscr.io/linuxserver/bazarr:latest
-    # restart: unless-stopped
-    # mem_limit: 300M
-    # mem_reservation: 250M
-    # networks:
-      # lsio:
-    # sysctls:
-      # - net.ipv6.conf.all.disable_ipv6=1
-    # ports:
-      # - 6767:6767
-    # environment:
-      # - PUID=${PUID}
-      # - PGID=${PGID}
-      # - TZ=${TZ}
-      # - HAS_IPV6=false
-    # volumes:
-      # - ${USERDIR}/bazarr:/config
-      # - ${DATADIR}/media:/data/media
+  bazarr:
+    container_name: bazarr
+    hostname: bazarr
+    image: lscr.io/linuxserver/bazarr:latest
+    restart: unless-stopped
+    mem_limit: 300M
+    mem_reservation: 250M
+    networks:
+      lsio:
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    ports:
+      - 6767:6767
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - HAS_IPV6=false
+    volumes:
+      - ${USERDIR}/bazarr:/config
+      - ${DATADIR}/media:/data/media
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   # Tdarr - Video conversion
   tdarr:
@@ -250,13 +320,21 @@ services:
       - ${USERDIR}/Tdarr/Logs:/app/logs
       - ${DATADIR}/media/Transcode:/temp
       - ${DATADIR}/media:/data/media
-
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
+      
   ############################# HOME THEATRE
   plex:
     container_name: plex
+    hostname: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #if you use this, comment networks and port entry
+    network_mode: "host" #if you use this, comment out networks and port entries
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -267,15 +345,23 @@ services:
     volumes:
       - ${USERDIR}/plex:/config
       - ${DATADIR}/media:/data/media
-      - ${DATADIR}/media/Transcode:/tmp
+      - ${DATADIR}/media:/transcode
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
       - /dev/dri/card0:/dev/dri/card0
       - /dev/dri/renderD128:/dev/dri/renderD128
-
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
+      
   ############################# PLEX MONITORING
   tautulli:
     container_name: tautulli
+    hostname: tautulli
     image: lscr.io/linuxserver/tautulli:latest
     restart: unless-stopped
     networks:
@@ -292,6 +378,13 @@ services:
     volumes:
       - ${USERDIR}/tautulli:/config
       - ${USERDIR}/plex:/plex
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# BOOK LIBRARY MANAGEMENT
   # Calibre – Content server
@@ -325,7 +418,13 @@ services:
       - ${DATADIR}:/data
       - ${DATADIR}/media/books/imports:/imports
       - ${USERDIR}/calibre/tmp/runtime-abc:/tmp/runtime-abc
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# SYSTEM MANAGEMENT/MONITORING
   # Dozzle - Real-time Docker Log Viewer
@@ -348,6 +447,43 @@ services:
       - DOZZLE_FILTER="status=running"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
+
+  # Notifiarr - update ARR profiles
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    privileged: true
+    restart: unless-stopped
+    networks:
+      lsio:
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+    ports:
+      - 5454:5454
+    environment:
+      - USER=docker
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${USERDIR}/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultwarden - Locally-hosted Bitwarden
@@ -376,3 +512,10 @@ services:
       - SMTP_PASSWORD=${GOOGPASS}
     volumes:
       - ${VAULTDIR}:/data
+    labels:
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
