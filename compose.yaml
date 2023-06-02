@@ -37,12 +37,13 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      # - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
-      # - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
+      - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
       - HAS_IPV6=false
     volumes:
       - ${USERDIR}/swag:/config
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -71,6 +72,30 @@ services:
       - DNS_SERVER=1.1.1.1
       - CRON="@daily"
     labels:
+      - dozzle
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      - org.hotio.pullio.script.notify=bash /notify-script.sh
+      - org.hotio.pullio.script.update=bash /update-script.sh
+
+  # Flaresolverr - Bypass Cloudflare e.g. for Torrentleech
+  flaresolverr:
+    container_name: flaresolverr
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      - 8191:8191
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - LOG_LEVEL=error
+      - HAS_IPV6=false
+    labels:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -98,6 +123,7 @@ services:
     volumes:
       - ${USERDIR}/organizr:/config
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -126,6 +152,7 @@ services:
     volumes:
       - ${USERDIR}/prowlarr:/config
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -156,6 +183,7 @@ services:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -181,12 +209,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - WEBUI_PORT=9091
+      - WEBUI_PORT=8080
       - HAS_IPV6=false
     volumes:
       - ${USERDIR}/qBittorrent:/config
       - ${DATADIR}/torrents:/data/torrents
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -218,6 +247,7 @@ services:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -229,7 +259,7 @@ services:
   sonarr:
     container_name: sonarr
     hostname: sonarr
-    image: lscr.io/linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:develop
     restart: unless-stopped
     networks:
       lsio:
@@ -248,6 +278,7 @@ services:
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -278,6 +309,7 @@ services:
       - ${USERDIR}/bazarr:/config
       - ${DATADIR}/media:/data/media
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -299,8 +331,6 @@ services:
       - 8266:8266
     devices:
       - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -321,20 +351,25 @@ services:
       - ${DATADIR}/media/Transcode:/temp
       - ${DATADIR}/media:/data/media
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       - org.hotio.pullio.script.notify=bash /notify-script.sh
       - org.hotio.pullio.script.update=bash /update-script.sh
-      
+
   ############################# HOME THEATRE
   plex:
     container_name: plex
     hostname: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #if you use this, comment out networks and port entries
+    network_mode: "host"
+    # networks:
+      # lsio:
+    # ports:
+      # - 32400:32400
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -348,16 +383,15 @@ services:
       - ${DATADIR}/media:/transcode
     devices:
       - /dev/dri:/dev/dri # optional: if Syno has Intel CPU & you want HW transcoding
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       - org.hotio.pullio.script.notify=bash /notify-script.sh
       - org.hotio.pullio.script.update=bash /update-script.sh
-      
+
   ############################# PLEX MONITORING
   tautulli:
     container_name: tautulli
@@ -379,6 +413,7 @@ services:
       - ${USERDIR}/tautulli:/config
       - ${USERDIR}/plex:/plex
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -391,7 +426,6 @@ services:
   calibre:
     container_name: calibre
     image: lscr.io/linuxserver/calibre:latest
-    # privileged: true
     security_opt:
       - seccomp:unconfined #optional
     restart: unless-stopped
@@ -404,8 +438,6 @@ services:
       - 8081:8081
     devices:
       - /dev/dri:/dev/dri
-      - /dev/dri/card0:/dev/dri/card0
-      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -419,6 +451,7 @@ services:
       - ${DATADIR}/media/books/imports:/imports
       - ${USERDIR}/calibre/tmp/runtime-abc:/tmp/runtime-abc
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -445,8 +478,10 @@ services:
       - DOZZLE_LEVEL=error
       - DOZZLE_TAILSIZE=300
       - DOZZLE_FILTER="status=running"
+      - DOZZLE_FILTER="label=dozzle" # limits logs displayed to containers with this label
+      # - DOCKER_HOST="tcp://dockerproxy:2375" # enable when using socket proxy
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
@@ -473,11 +508,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - DN_API_KEY=${NOTIFIARR}
     volumes:
       - ${USERDIR}/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
       - /etc/machine-id:/etc/machine-id
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -513,6 +550,7 @@ services:
     volumes:
       - ${VAULTDIR}:/data
     labels:
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
