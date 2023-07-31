@@ -275,30 +275,42 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  # Unmanic - Video conversion
-  unmanic:
-    container_name: unmanic
+  # Tdarr - Video conversion
+  tdarr:
+    container_name: tdarr
     privileged: true
-    image: josh5/unmanic:latest
+    image: haveagitgat/tdarr
     restart: unless-stopped
     networks:
       lsio:
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     ports:
-      - 8888:8888
+      - 8265:8265
+      - 8266:8266
     devices: # these are optional (used if Syno has Intel CPU, for HW transcoding)
       - /dev/dri:/dev/dri
-      - /dev/dri/renderD128:/dev/dri/renderD128
       - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - nodeID=TdarrNode
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - THREADS_WORKER_INIT_TIMEOUT=200000
+      - gpus=all
     volumes:
-      - ${USERDIR}/unmanic:/config
-      - ${DATADIR}/media/Transcode:/tmp/unmanic
-      - ${DATADIR}:/data
+      - ${USERDIR}:/app/server
+      - ${USERDIR}/Tdarr/Configs:/app/configs
+      - ${USERDIR}/Tdarr/Logs:/app/logs
+      - ${DATADIR}/media/Transcode:/temp
+      - ${DATADIR}/media:/data/media
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
