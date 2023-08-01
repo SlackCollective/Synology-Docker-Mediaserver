@@ -18,7 +18,7 @@ Containers in use:
       - cloudflare-ddns
       - plex
       - tautulli
-      - tdarr
+      - unmanic
       - notifiarr
       - vaultwarden (self-hosted Bitwarden)
 
