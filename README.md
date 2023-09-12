@@ -11,6 +11,7 @@ Containers in use:
       - sonarr
       - radarr
       - qbittorrent
+      - qbit-manage
       - sabnzbd
       - bazarr
       - calibre
@@ -18,7 +19,7 @@ Containers in use:
       - cloudflare-ddns
       - plex
       - tautulli
-      - unmanic
+      - tdarr
       - notifiarr
       - vaultwarden (self-hosted Bitwarden)
 
