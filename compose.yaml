@@ -1,16 +1,3 @@
-version: "3.2"
-########################### NETWORKS
-networks:
-  default:
-    driver: bridge
-  lsio:
-    ipam:
-      driver: default
-      config:
-        - subnet: "172.28.0.0/16"
-          gateway: "172.28.5.254"
-    name: lsio
-
 ########################### SERVICES
 services:
   ############################# WEBSERVER
@@ -22,12 +9,9 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 449:443
-      # - 89:80 # If you need port 80 at all
-      # - 81:81 # For Swag dashboard LAN access
+      - 89:80 # simply to allow for http to https redirect
     logging:
       driver: json-file
       options:
@@ -63,8 +47,6 @@ services:
     hostname: cloudflare-ddns
     image: oznu/cloudflare-ddns
     restart: unless-stopped
-    networks:
-      lsio:
     logging:
       driver: json-file
       options:
@@ -94,8 +76,6 @@ services:
     hostname: flaresolverr
     image: ghcr.io/flaresolverr/flaresolverr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 8191:8191
     logging:
@@ -122,8 +102,6 @@ services:
     hostname: organizr
     image: ghcr.io/organizr/organizr
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 88:80
     logging:
@@ -132,10 +110,10 @@ services:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
+      - fpm="true"
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - fpm=true #true or false | using true will provide better performance
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/organizr:/config
@@ -153,8 +131,6 @@ services:
     hostname: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 9696:9696
     logging:
@@ -185,11 +161,8 @@ services:
     hostname: sabnzbd
     image: lscr.io/linuxserver/sabnzbd:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 9998:8080
-      # - 9090:9090
     logging:
       driver: json-file
       options:
@@ -199,7 +172,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DOCKER_MODS=linuxserver/mods:sabnzbd-par2cmdline-turbo
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sabnzbd:/config
@@ -220,14 +192,11 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=1  # Optional, if you want to use ipv6
+      - net.ipv6.conf.all.disable_ipv6=1
     restart: unless-stopped
-    networks:
-      lsio:
-    ports:
     ports:
       - 9997:8080
-      # - 8118:8118
+      # - 8118:8118 #for socket proxy
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -247,7 +216,7 @@ services:
       - VPN_LAN_NETWORK=192.168.1.0/24 #<lan ipv4 network>/<cidr notation>
       - VPN_CONF=wg0
       - PRIVOXY_ENABLED=false # or true
-      # - WEBUI_PORTS=8080/tcp,8080/udp # only needed if you don't use default ports
+      # - WEBUI_PORTS=9997/tcp,9997/udp # only needed if you don't use default ports
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbittorrent:/config:rw
@@ -265,8 +234,6 @@ services:
     hostname: qbitmanage
     image: bobokun/qbit_manage
     restart: unless-stopped
-    networks:
-      lsio:
     logging:
       driver: json-file
       options:
@@ -277,12 +244,21 @@ services:
       - PGID=${PGID}
       - UMASK=022
       - TZ=${TZ}
+      - QBT_RUN=false
       - QBT_SCHEDULE=1440
-      - QBT_STARTUP_DELAY=30
       - QBT_CONFIG=config.yml
       - QBT_LOGFILE=activity.log
+      - QBT_CROSS_SEED=false
+      - QBT_RECHECK=false
+      - QBT_CAT_UPDATE=false
       - QBT_TAG_UPDATE=true
+      - QBT_REM_UNREGISTERED=false
       - QBT_REM_ORPHANED=true
+      - QBT_TAG_TRACKER_ERROR=false
+      - QBT_TAG_NOHARDLINKS=false
+      - QBT_SHARE_LIMITS=false
+      - QBT_SKIP_CLEANUP=false
+      - QBT_DRY_RUN=false
       - QBT_LOG_LEVEL=ERROR
       - QBT_DIVIDER==
       - QBT_WIDTH=100
@@ -298,34 +274,6 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  # autobrr - torrent RSS downloader
-  autobrr:
-    container_name: autobrr
-    hostname: autobrr
-    image: ghcr.io/autobrr/autobrr:latest
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 7474:7474
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    environment:
-      - TZ=${TZ}
-    user: ${PUID}:${PGID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${USERDIR}/autobrr:/config
-    labels:
-      # - dozzle
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
   radarr:
@@ -333,8 +281,6 @@ services:
     hostname: radarr
     image: lscr.io/linuxserver/radarr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 7878:7878
     logging:
@@ -363,8 +309,6 @@ services:
     hostname: sonarr
     image: lscr.io/linuxserver/sonarr:develop
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 8989:8989
     logging:
@@ -393,8 +337,6 @@ services:
     hostname: bazarr
     image: lscr.io/linuxserver/bazarr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 6767:6767
     logging:
@@ -424,8 +366,6 @@ services:
     image: haveagitgat/tdarr
     privileged: true
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 8265:8265
       - 8266:8266
@@ -440,7 +380,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - serverIP=0.0.0.0
+      - serverIP=172.19.0.1
       - serverPort=8266
       - webUIPort=8265
       - internalNode=true
@@ -480,12 +420,11 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
-      - ARGS=
-      - PLEX_CLAIM=${PLEX_CLAIM}
-      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
-      - ALLOWED_NETWORKS=
+      - VERSION=docker
       - PLEX_PASS=${PLEX_PASS}
+      # - PLEX_CLAIM=${PLEX_CLAIM}
+      # - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      # - ALLOWED_NETWORKS=192.168.0.0/255.255.0.0,172.16.0.0/255.240.0.0,100.78.157.40
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -541,8 +480,6 @@ services:
     hostname: tautulli
     image: lscr.io/linuxserver/tautulli:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 8181:8181
     logging:
@@ -574,8 +511,6 @@ services:
     hostname: overseerr
     image: lscr.io/linuxserver/overseerr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 5055:5055
     logging:
@@ -605,14 +540,9 @@ services:
     hostname: calibre
     image: lscr.io/linuxserver/calibre:latest
     restart: unless-stopped
-    security_opt:
-      - seccomp:unconfined #optional
-    networks:
-      lsio:
     ports:
       - 8082:8080
       - 8083:8081
-      - 8182:8181
     logging:
       driver: json-file
       options:
@@ -623,6 +553,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
+      # - DISABLE_AUTH=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
@@ -642,8 +573,6 @@ services:
     hostname: dozzle
     image: amir20/dozzle
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 9999:8080
     logging:
@@ -675,8 +604,6 @@ services:
     hostname: ${HOSTNAME}
     image: golift/notifiarr:latest
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 5454:5454
     logging:
@@ -701,13 +628,11 @@ services:
 
   ############################# SECURITY/PASSWORD MANAGEMENT
   # Vaultwarden - Locally-hosted Bitwarden
-  bitwarden:
-    container_name: bitwarden
-    hostname: bitwarden
+  vaultwarden:
+    container_name: vaultwarden
+    hostname: vaultwarden
     image: vaultwarden/server
     restart: unless-stopped
-    networks:
-      lsio:
     ports:
       - 8269:80
     logging:
