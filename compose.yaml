@@ -390,7 +390,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - serverIP=172.19.0.1
+      - serverIP=172.18.0.1
       - serverPort=8266
       - webUIPort=8265
       - internalNode=true
