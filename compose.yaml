@@ -1,3 +1,15 @@
+########################### NETWORKS
+networks:
+  default:
+    driver: bridge
+  lsio:
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"
+          gateway: "172.18.0.1"
+    name: lsio
+
 ########################### SERVICES
 services:
   ############################# WEBSERVER
@@ -9,9 +21,12 @@ services:
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 449:443
       - 89:80 # simply to allow for http to https redirect
+      # - 81:81 # for Swag Dashboard
     logging:
       driver: json-file
       options:
@@ -47,6 +62,8 @@ services:
     hostname: cloudflare-ddns
     image: oznu/cloudflare-ddns
     restart: unless-stopped
+    networks:
+      lsio:
     logging:
       driver: json-file
       options:
@@ -70,31 +87,6 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  # Flaresolverr - Bypass Cloudflare
-  flaresolverr:
-    container_name: flaresolverr
-    hostname: flaresolverr
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    restart: unless-stopped
-    ports:
-      - 8191:8191
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - LOG_LEVEL=error
-    labels:
-      # - dozzle
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
   organizr:
@@ -102,6 +94,8 @@ services:
     hostname: organizr
     image: ghcr.io/organizr/organizr
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 88:80
     logging:
@@ -131,6 +125,8 @@ services:
     hostname: prowlarr
     image: lscr.io/linuxserver/prowlarr:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 9696:9696
     logging:
@@ -161,6 +157,8 @@ services:
     hostname: sabnzbd
     image: lscr.io/linuxserver/sabnzbd:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 9998:8080
     logging:
@@ -194,6 +192,8 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 9997:8080
       # - 8118:8118 #for socket proxy
@@ -205,8 +205,8 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    devices:                              # Optional, uncomment if you use VPN
-      - /dev/net/tun:/dev/net/tun         # Optional, uncomment if you use VPN
+    devices: # Optional, uncomment if you don't use VPN
+      - /dev/net/tun:/dev/net/tun # Optional, uncomment if you don't use VPN
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -234,6 +234,8 @@ services:
     hostname: qbitmanage
     image: bobokun/qbit_manage
     restart: unless-stopped
+    networks:
+      lsio:
     logging:
       driver: json-file
       options:
@@ -266,7 +268,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbitmanage:/config
       - ${USERDIR}/qbittorrent/data/BT_backup:/qbit_appdata # modify if needed
-      - ${DATADIR}/torrents:/data/torrents               # modify if needed
+      - ${DATADIR}/torrents:/data/torrents # modify if needed
     labels:
       # - dozzle
       - org.hotio.pullio.notify=true
@@ -281,6 +283,8 @@ services:
     hostname: radarr
     image: lscr.io/linuxserver/radarr:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 7878:7878
     logging:
@@ -309,6 +313,8 @@ services:
     hostname: sonarr
     image: lscr.io/linuxserver/sonarr:develop
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 8989:8989
     logging:
@@ -337,6 +343,8 @@ services:
     hostname: bazarr
     image: lscr.io/linuxserver/bazarr:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 6767:6767
     logging:
@@ -366,6 +374,8 @@ services:
     image: haveagitgat/tdarr
     privileged: true
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 8265:8265
       - 8266:8266
@@ -422,9 +432,6 @@ services:
       - TZ=${TZ}
       - VERSION=docker
       - PLEX_PASS=${PLEX_PASS}
-      # - PLEX_CLAIM=${PLEX_CLAIM}
-      # - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
-      # - ALLOWED_NETWORKS=192.168.0.0/255.255.0.0,172.16.0.0/255.240.0.0,100.78.157.40
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -480,6 +487,8 @@ services:
     hostname: tautulli
     image: lscr.io/linuxserver/tautulli:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 8181:8181
     logging:
@@ -511,6 +520,8 @@ services:
     hostname: overseerr
     image: lscr.io/linuxserver/overseerr:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 5055:5055
     logging:
@@ -540,6 +551,8 @@ services:
     hostname: calibre
     image: lscr.io/linuxserver/calibre:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 8082:8080
       - 8083:8081
@@ -553,7 +566,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
-      # - DISABLE_AUTH=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
@@ -573,6 +585,8 @@ services:
     hostname: dozzle
     image: amir20/dozzle
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 9999:8080
     logging:
@@ -604,6 +618,8 @@ services:
     hostname: ${HOSTNAME}
     image: golift/notifiarr:latest
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 5454:5454
     logging:
@@ -611,7 +627,6 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    user: 1031:100
     environment:
       - TZ=${TZ}
       - DN_API_KEY=${NOTIFIARR}
@@ -620,7 +635,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/notifiarr:/config
     labels:
-      - dozzle
+      # - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -633,6 +648,8 @@ services:
     hostname: vaultwarden
     image: vaultwarden/server
     restart: unless-stopped
+    networks:
+      lsio:
     ports:
       - 8269:80
     logging:
