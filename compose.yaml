@@ -24,9 +24,9 @@ services:
     networks:
       lsio:
     ports:
-      - 449:443
-      - 89:80 # simply to allow for http to https redirect
-      # - 81:81 # for Swag Dashboard
+      - 0.0.0.0:449:443
+      - 0.0.0.0:89:80 # simply to allow for http to https redirect
+      # - 0.0.0.0:81:81 # for Swag Dashboard
     logging:
       driver: json-file
       options:
@@ -97,7 +97,7 @@ services:
     networks:
       lsio:
     ports:
-      - 88:80
+      - 0.0.0.0:88:80
     logging:
       driver: json-file
       options:
@@ -128,7 +128,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9696:9696
+      - 0.0.0.0:9696:9696
     logging:
       driver: json-file
       options:
@@ -160,7 +160,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9998:8080
+      - 0.0.0.0:9998:8080
     logging:
       driver: json-file
       options:
@@ -170,6 +170,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sabnzbd:/config
@@ -195,8 +196,8 @@ services:
     networks:
       lsio:
     ports:
-      - 9997:8080
-      # - 8118:8118 #for socket proxy
+      - 0.0.0.0:9997:8080
+      # - 0.0.0.0:8118:8118 #for socket proxy
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -286,7 +287,7 @@ services:
     networks:
       lsio:
     ports:
-      - 7878:7878
+      - 0.0.0.0:7878:7878
     logging:
       driver: json-file
       options:
@@ -316,7 +317,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8989:8989
+      - 0.0.0.0:8989:8989
     logging:
       driver: json-file
       options:
@@ -346,7 +347,7 @@ services:
     networks:
       lsio:
     ports:
-      - 6767:6767
+      - 0.0.0.0:6767:6767
     logging:
       driver: json-file
       options:
@@ -377,8 +378,8 @@ services:
     networks:
       lsio:
     ports:
-      - 8265:8265
-      - 8266:8266
+      - 0.0.0.0:8265:8265
+      - 0.0.0.0:8266:8266
     logging:
       driver: json-file
       options:
@@ -490,7 +491,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8181:8181
+      - 0.0.0.0:8181:8181
     logging:
       driver: json-file
       options:
@@ -523,7 +524,7 @@ services:
     networks:
       lsio:
     ports:
-      - 5055:5055
+      - 0.0.0.0:5055:5055
     logging:
       driver: json-file
       options:
@@ -554,8 +555,8 @@ services:
     networks:
       lsio:
     ports:
-      - 8082:8080
-      - 8083:8081
+      - 0.0.0.0:8082:8080
+      - 0.0.0.0:8083:8081
     logging:
       driver: json-file
       options:
@@ -588,7 +589,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9999:8080
+      - 0.0.0.0:9999:8080
     logging:
       driver: json-file
       options:
@@ -621,7 +622,7 @@ services:
     networks:
       lsio:
     ports:
-      - 5454:5454
+      - 0.0.0.0:5454:5454
     logging:
       driver: json-file
       options:
@@ -651,7 +652,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8269:80
+      - 0.0.0.0:8269:80
     logging:
       driver: json-file
       options:
