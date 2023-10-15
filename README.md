@@ -4,24 +4,35 @@ Working configuration of media services, running Linuxserver Swag for reverse pr
 Router ports forwarded to NAS:
 Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (external) > 89 (internal) if you want to be able to redirect all web traffic to https.
 
-Containers in use:
-      - swag
-      - prowlarr
-      - organizr
-      - sonarr
-      - radarr
-      - qbittorrent
-      - qbit-manage
-      - sabnzbd
-      - bazarr
-      - calibre
-      - dozzle
-      - cloudflare-ddns
-      - plex
-      - tautulli
-      - tdarr
-      - notifiarr
-      - vaultwarden (self-hosted Bitwarden)
+# Containers in use:
+### WEBSERVER/REVERSE PROXY/DNS
+* swag
+* cloudflare-ddns
+### FRONTEND/AUTH
+* organizr
+### INDEXERS
+* prowlarr
+### DOWNLOADERS
+* sabnzbd
+* qbittorrent
+* qbit-manage
+* autobrr
+### MEDIA SEARCH
+* sonarr
+* radarr
+* bazarr
+### VIDEO CONVERSION
+* tdarr
+### HOME THEATRE
+* plex
+* tautulli
+### BOOKS
+* calibre
+### PASSWORD MANAGEMENT
+* vaultwarden (self-hosted Bitwarden)
+### SYSTEM MONITORING
+* dozzle
+* notifiarr
 
 Requires docker-compose.yaml and .env file in the same directory.
 
