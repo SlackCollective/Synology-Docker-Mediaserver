@@ -17,6 +17,7 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 * qbittorrent
 * qbit-manage
 * autobrr
+* omegabrr
 ### MEDIA SEARCH
 * sonarr
 * radarr
