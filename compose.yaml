@@ -26,7 +26,7 @@ services:
     ports:
       - 0.0.0.0:449:443
       - 0.0.0.0:89:80 # simply to allow for http to https redirect
-      - 0.0.0.0:81:81 # for Swag Dashboard
+      # - 0.0.0.0:81:81 # for Swag Dashboard
     logging:
       driver: json-file
       options:
@@ -43,11 +43,13 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
+      - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/swag:/config
+      - ${USERDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
+      # - ${USERDIR}/swag/log:/dashboard/logs:ro
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -197,6 +199,7 @@ services:
       lsio:
     ports:
       - 0.0.0.0:9997:8080
+      - 0.0.0.0:65523:65523
       # - 0.0.0.0:8118:8118 #for socket proxy
     dns:
       - 1.1.1.1
@@ -301,7 +304,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/autobrr:/config
     labels:
-      - dozzle
+      # - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -329,7 +332,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/omegabrr:/config
     labels:
-      - dozzle
+      # - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -496,7 +499,6 @@ services:
       - ${USERDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
       - ${DATADIR}/media:/transcode
-      - ${USERDIR}/threadfin:/threadfin
     devices:
       - /dev/dri:/dev/dri
     labels:
@@ -505,39 +507,6 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-      
-  # Threadfin - IPTV
-  # threadfin:
-    # container_name: threadfin
-    # hostname: threadfin
-    # image: fyb3roptik/threadfin
-    # restart: unless-stopped
-    # network_mode: "host"
-    # logging:
-      # driver: json-file
-      # options:
-        # max-file: ${DOCKERLOGGING_MAXFILE}
-        # max-size: ${DOCKERLOGGING_MAXSIZE}
-    # environment:
-      # - PUID=${PUID}
-      # - PGID=${PGID}
-      # - THREADFIN_UID=${PUID}
-      # - THREADFIN_GID=${PGID}
-      # - THREADFIN_USER=docker
-      # - THREADFIN_CONF=/config
-      # - TZ=${TZ}
-      # - HAS_IPV6=false
-    # volumes:
-      # - /etc/localtime:/etc/localtime:ro
-      # - ${USERDIR}/threadfin:/config
-    # devices: # these are optional (used if Syno has Intel CPU, for HW transcoding)
-      # - /dev/dri:/dev/dri
-    # labels:
-      # - dozzle
-      # - org.hotio.pullio.notify=true
-      # - org.hotio.pullio.update=true
-      # - org.hotio.pullio.discord.webhook=${DISCORD}
-      # - org.hotio.pullio.generic.webhook=${PULLIO}
 
   ############################# PLEX MONITORING/MANAGEMENT
   # Tautulli - Media play and user monitoring
@@ -625,11 +594,15 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - HAS_IPV6=false
+      - DRINODE=/dev/dri/renderD128
+      - TITLE=BrunswickBooks
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
       - ${DATADIR}/media/books/imports:/imports
+    devices:
+      - /dev/dri:/dev/dri
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -720,8 +693,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
-      - WEBSOCKET_ENABLED=true  # Enable WebSocket notifications.
+      # - ADMIN_TOKEN='$argon2id$v=19$m=19456,t=2,p=1$OiVNJ47nejPOukP0GbcKbNy5c9dSBXRb9VAd3iDmp80$7ijEqLqaxeq6GFWsVv4dnSHBCjy/Dnq+LBYbQd6JR3A'
+      - WEBSOCKET_ENABLED=false  # Enable WebSocket notifications.
       - EXTENDED_LOGGING=true
       - LOG_LEVEL=error
     volumes:
