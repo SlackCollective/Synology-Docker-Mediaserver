@@ -189,8 +189,9 @@ services:
     container_name: qbittorrent
     hostname: qbittorrent
     image: cr.hotio.dev/hotio/qbittorrent
-    cap_add:
-      - NET_ADMIN
+    # cap_add:
+      # - NET_ADMIN
+    privileged: true
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
@@ -217,7 +218,7 @@ services:
       - TZ=${TZ}
       - UMASK=022
       - VPN_ENABLED=true # true or false
-      - VPN_LAN_NETWORK=192.168.1.0/24 #<lan ipv4 network>/<cidr notation>
+      # - VPN_LAN_NETWORK=192.168.1.0/24 #<lan ipv4 network>/<cidr notation>
       - VPN_CONF=wg0
       - PRIVOXY_ENABLED=false # or true
       # - WEBUI_PORTS=9997/tcp,9997/udp # only needed if you don't use default ports
