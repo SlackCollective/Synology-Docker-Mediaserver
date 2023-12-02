@@ -218,7 +218,7 @@ services:
       - TZ=${TZ}
       - UMASK=022
       - VPN_ENABLED=true # true or false
-      # - VPN_LAN_NETWORK=192.168.1.0/24 #<lan ipv4 network>/<cidr notation>
+      # - VPN_LAN_NETWORK=172.18.0.12/16,192.168.1.0/24 #<lan ipv4 network>/<cidr notation>
       - VPN_CONF=wg0
       - PRIVOXY_ENABLED=false # or true
       # - WEBUI_PORTS=9997/tcp,9997/udp # only needed if you don't use default ports
@@ -495,6 +495,7 @@ services:
       - TZ=${TZ}
       - VERSION=docker
       - PLEX_PASS=${PLEX_PASS}
+      - HOSTNAME=plex.${DOMAINNAME}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -579,6 +580,8 @@ services:
     container_name: calibre
     hostname: calibre
     image: lscr.io/linuxserver/calibre:latest
+    security_opt:
+      - seccomp:unconfined
     restart: unless-stopped
     networks:
       lsio:
@@ -679,7 +682,7 @@ services:
   vaultwarden:
     container_name: vaultwarden
     hostname: vaultwarden
-    image: vaultwarden/server
+    image: vaultwarden/server:latest
     restart: unless-stopped
     networks:
       lsio:
@@ -694,10 +697,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - ADMIN_TOKEN='$argon2id$v=19$m=19456,t=2,p=1$OiVNJ47nejPOukP0GbcKbNy5c9dSBXRb9VAd3iDmp80$7ijEqLqaxeq6GFWsVv4dnSHBCjy/Dnq+LBYbQd6JR3A'
-      - WEBSOCKET_ENABLED=false  # Enable WebSocket notifications.
-      - EXTENDED_LOGGING=true
-      - LOG_LEVEL=error
+      - DOMAIN="https://vaultwarden.${DOMAINNAME}"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
