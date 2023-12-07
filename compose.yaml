@@ -483,7 +483,15 @@ services:
     hostname: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host"
+    networks:
+      lsio:
+    ports:
+      - 32400:32400
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    # network_mode: "host"
     logging:
       driver: json-file
       options:
@@ -495,7 +503,7 @@ services:
       - TZ=${TZ}
       - VERSION=docker
       - PLEX_PASS=${PLEX_PASS}
-      - HOSTNAME=plex.${DOMAINNAME}
+      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -697,7 +705,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DOMAIN="https://vaultwarden.${DOMAINNAME}"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
