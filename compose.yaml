@@ -443,7 +443,7 @@ services:
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    devices: # these are optional (used if Syno has Intel CPU, for HW transcoding)
+    devices: # optional (used if Syno has Intel CPU, for HW transcoding)
       - /dev/dri:/dev/dri
     environment:
       - PUID=${PUID}
