@@ -187,8 +187,10 @@ services:
   qbittorrent:
     container_name: qbittorrent
     hostname: qbittorrent
-    image: cr.hotio.dev/hotio/qbittorrent
+    image: ghcr.io/hotio/qbittorrent
     privileged: true
+    cap_add:
+      - NET_ADMIN
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=1
@@ -197,7 +199,6 @@ services:
       lsio:
     ports:
       - 9997:8080
-      - 65523:65523
       # - 8118:8118 #for socket proxy
     dns:
       - 1.1.1.1
@@ -213,17 +214,18 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
+      - UMASK=002
       - VPN_ENABLED=true # true or false
       - VPN_CONF=wg0
       - PRIVOXY_ENABLED=false # or true
+      - VPN_LAN_NETWORK=192.168.1.0/24
       # - WEBUI_PORTS=9997/tcp,9997/udp # only needed if you don't use default ports
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
     labels:
-      - dozzle
+      # - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -233,7 +235,7 @@ services:
   qbit_manage:
     container_name: qbitmanage
     hostname: qbitmanage
-    image: bobokun/qbit_manage
+    image: ghcr.io/hotio/qbitmanage
     restart: unless-stopped
     networks:
       lsio:
@@ -245,7 +247,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK=022
+      - UMASK=002
       - TZ=${TZ}
       - QBT_RUN=false
       - QBT_SCHEDULE=1440
@@ -256,7 +258,7 @@ services:
       - QBT_CAT_UPDATE=false
       - QBT_TAG_UPDATE=true
       - QBT_REM_UNREGISTERED=false
-      - QBT_REM_ORPHANED=true
+      - QBT_REM_ORPHANED=false
       - QBT_TAG_TRACKER_ERROR=false
       - QBT_TAG_NOHARDLINKS=false
       - QBT_SHARE_LIMITS=false
@@ -571,6 +573,39 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/overseerr:/config
       - ${DATADIR}/media:/data/media
+    labels:
+      # - dozzle
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
+  ############################# INTERNET VIDEO DOWNLOADER
+  # Metube – Self-hosted YT downloader with GUI
+  metube:
+    container_name: metube
+    hostname: metube
+    image: ghcr.io/alexta69/metube
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      - 8084:8081
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - UID=${PUID}
+      - GID=${PGID}
+      - TZ=${TZ}
+      - UMASK=002
+      - DELETE_FILE_ON_TRASHCAN=true
+      - OUTPUT_TEMPLATE=%(playlist_title&Playlist |)S%(playlist_title|)S%(playlist_uploader& by |)S%(playlist_uploader|)S%(playlist_autonumber& - |)S%(playlist_autonumber|)S%(playlist_count& of |)S%(playlist_count|)S%(playlist_autonumber& - |)S%(uploader,creator|UNKNOWN_AUTHOR)S - %(title|UNKNOWN_TITLE)S - %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d|UNKNOWN_DATE)S.%(ext)s
+    volumes:
+      - ${DATADIR}/media/youtube:/downloads
+      - ${DATADIR}/media/youtube/cookies:/cookies
     labels:
       # - dozzle
       - org.hotio.pullio.notify=true
