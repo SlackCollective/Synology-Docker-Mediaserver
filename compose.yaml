@@ -24,8 +24,9 @@ services:
     networks:
       lsio:
     ports:
-      - 449:443
-      - 89:80 # simply to allow for http to https redirect
+      - 0.0.0.0:449:443
+      # - 89:80 # simply to allow for http to https redirect
+      # - 81:81 # Swag dashboard
     logging:
       driver: json-file
       options:
@@ -48,7 +49,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/swag:/config
       - ${USERDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
-      # - ${USERDIR}/swag/log:/dashboard/logs:ro
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -93,12 +93,12 @@ services:
   organizr:
     container_name: organizr
     hostname: organizr
-    image: ghcr.io/organizr/organizr
+    image: organizr/organizr
     restart: unless-stopped
     networks:
       lsio:
     ports:
-      - 88:80
+      - 0.0.0.0:88:80
     logging:
       driver: json-file
       options:
@@ -129,7 +129,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9696:9696
+      - 0.0.0.0:9696:9696
     logging:
       driver: json-file
       options:
@@ -161,7 +161,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9998:8080
+      - 0.0.0.0:9998:8080
     logging:
       driver: json-file
       options:
@@ -187,45 +187,31 @@ services:
   qbittorrent:
     container_name: qbittorrent
     hostname: qbittorrent
-    image: ghcr.io/hotio/qbittorrent
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=1
+    image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     networks:
       lsio:
     ports:
-      - 9997:8080
-      # - 8118:8118 #for socket proxy
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+      - 0.0.0.0:9997:9997
+      - 0.0.0.0:6887:6887
+      - 0.0.0.0:6887:6887/udp
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
-    devices: # Optional, uncomment if you use VPN
-      - /dev/net/tun:/dev/net/tun # Optional, uncomment if you use VPN
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
-      - VPN_ENABLED=true # true or false
-      - VPN_CONF=wg0
-      - PRIVOXY_ENABLED=false # or true
-      - VPN_LAN_NETWORK=192.168.1.0/24
-      # - WEBUI_PORTS=9997/tcp,9997/udp # only needed if you don't use default ports
+      - WEBUI_PORT=9997
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
     labels:
-      # - dozzle
+      - dozzle
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
@@ -270,7 +256,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbitmanage:/config
-      - ${USERDIR}/qbittorrent/data/BT_backup:/qbit_appdata # modify if needed
+      - ${USERDIR}/qbittorrent/qBittorrent/BT_backup:/qbit_appdata # modify if needed
       - ${DATADIR}/torrents:/data/torrents # modify if needed
     labels:
       # - dozzle
@@ -288,7 +274,7 @@ services:
     networks:
       lsio:
     ports:
-      - 7474:7474
+      - 0.0.0.0:7474:7474
     logging:
       driver: json-file
       options:
@@ -318,7 +304,7 @@ services:
     networks:
       lsio:
     ports:
-      - 7441:7441
+      - 0.0.0.0:7441:7441
     logging:
       driver: json-file
       options:
@@ -347,7 +333,7 @@ services:
     networks:
       lsio:
     ports:
-      - 7878:7878
+      - 0.0.0.0:7878:7878
     logging:
       driver: json-file
       options:
@@ -372,12 +358,12 @@ services:
   sonarr:
     container_name: sonarr
     hostname: sonarr
-    image: lscr.io/linuxserver/sonarr:develop
+    image: lscr.io/linuxserver/sonarr:latest
     restart: unless-stopped
     networks:
       lsio:
     ports:
-      - 8989:8989
+      - 0.0.0.0:8989:8989
     logging:
       driver: json-file
       options:
@@ -407,7 +393,7 @@ services:
     networks:
       lsio:
     ports:
-      - 6767:6767
+      - 0.0.0.0:6767:6767
     logging:
       driver: json-file
       options:
@@ -438,8 +424,8 @@ services:
     networks:
       lsio:
     ports:
-      - 8265:8265
-      - 8266:8266
+      - 0.0.0.0:8265:8265
+      - 0.0.0.0:8266:8266
     logging:
       driver: json-file
       options:
@@ -484,12 +470,11 @@ services:
     networks:
       lsio:
     ports:
-      - 32400:32400
-      - 32410:32410/udp
-      - 32412:32412/udp
-      - 32413:32413/udp
-      - 32414:32414/udp
-    # network_mode: "host"
+      - 0.0.0.0:32400:32400
+      - 0.0.0.0:32410:32410/udp
+      - 0.0.0.0:32412:32412/udp
+      - 0.0.0.0:32413:32413/udp
+      - 0.0.0.0:32414:32414/udp
     logging:
       driver: json-file
       options:
@@ -526,7 +511,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8181:8181
+      - 0.0.0.0:8181:8181
     logging:
       driver: json-file
       options:
@@ -559,7 +544,7 @@ services:
     networks:
       lsio:
     ports:
-      - 5055:5055
+      - 0.0.0.0:5055:5055
     logging:
       driver: json-file
       options:
@@ -590,7 +575,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8084:8081
+      - 0.0.0.0:8084:8081
     logging:
       driver: json-file
       options:
@@ -625,8 +610,8 @@ services:
     networks:
       lsio:
     ports:
-      - 8082:8080
-      - 8083:8081
+      - 0.0.0.0:8082:8080
+      - 0.0.0.0:8083:8081
     logging:
       driver: json-file
       options:
@@ -663,7 +648,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9999:8080
+      - 0.0.0.0:9999:8080
     logging:
       driver: json-file
       options:
@@ -696,7 +681,7 @@ services:
     networks:
       lsio:
     ports:
-      - 5454:5454
+      - 0.0.0.0:5454:5454
     logging:
       driver: json-file
       options:
@@ -726,7 +711,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8269:80
+      - 0.0.0.0:8269:80
     logging:
       driver: json-file
       options:
@@ -736,6 +721,9 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - PUSH_ENABLED=true
+      - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
+      - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
