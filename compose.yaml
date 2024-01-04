@@ -88,6 +88,52 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
+  ############################# VPN
+  # Gluetun - provider-agnostic VPN client
+  gluetun:
+    container_name: gluetun
+    hostname: gluetun
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      - 0.0.0.0:9997:9997/tcp
+      - 0.0.0.0:6887:6887
+      # - 8888:8888/tcp # HTTP proxy
+      # - 8388:8388/tcp # Shadowsocks
+      # - 8388:8388/udp # Shadowsocks
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
+      - VPN_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/gluetun:/gluetun
+    labels:
+      - dozzle
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
   organizr:
@@ -186,15 +232,16 @@ services:
   # qbittorrent - torrent downloader with VPN
   qbittorrent:
     container_name: qbittorrent
-    hostname: qbittorrent
+    # hostname: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 0.0.0.0:9997:9997
-      - 0.0.0.0:6887:6887
-      - 0.0.0.0:6887:6887/udp
+    network_mode: "service:gluetun"
+    # networks:
+      # lsio:
+    # ports:
+      # - 0.0.0.0:9997:9997
+      # - 0.0.0.0:6887:6887
+      # - 0.0.0.0:6887:6887/udp
     logging:
       driver: json-file
       options:
