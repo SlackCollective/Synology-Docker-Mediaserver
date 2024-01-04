@@ -5,9 +5,10 @@ Router ports forwarded to NAS:
 Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (external) > 89 (internal) if you want to be able to redirect all web traffic to https.
 
 # Containers in use:
-### WEBSERVER/REVERSE PROXY/DNS
+### WEBSERVER/REVERSE PROXY/DNS/VPN
 * swag
 * cloudflare-ddns
+* gluetun
 ### FRONTEND/AUTH
 * organizr
 ### INDEXERS
