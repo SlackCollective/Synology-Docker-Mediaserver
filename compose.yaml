@@ -671,6 +671,8 @@ services:
       - HAS_IPV6=false
       - DRINODE=/dev/dri/renderD128
       - TITLE=BrunswickBooks
+      - CLI_ARGS="--trusted-ips 192.168.0.0/16"
+
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
