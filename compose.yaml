@@ -24,7 +24,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:449:443
+      - 449:443
       # - 89:80 # simply to allow for http to https redirect
       # - 81:81 # Swag dashboard
     logging:
@@ -517,11 +517,11 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:32400:32400
-      - 0.0.0.0:32410:32410/udp
-      - 0.0.0.0:32412:32412/udp
-      - 0.0.0.0:32413:32413/udp
-      - 0.0.0.0:32414:32414/udp
+      - 32400:32400
+      # - 0.0.0.0:32410:32410/udp
+      # - 0.0.0.0:32412:32412/udp
+      # - 0.0.0.0:32413:32413/udp
+      # - 0.0.0.0:32414:32414/udp
     logging:
       driver: json-file
       options:
@@ -533,7 +533,7 @@ services:
       - TZ=${TZ}
       - VERSION=docker
       - PLEX_PASS=${PLEX_PASS}
-      - ADVERTISE_IP=${PLEX_ADVERTISE_IP}
+      - ADVERTISE_IP=http://192.168.1.156:32400
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -672,7 +672,6 @@ services:
       - DRINODE=/dev/dri/renderD128
       - TITLE=BrunswickBooks
       - CLI_ARGS="--trusted-ips 192.168.0.0/16"
-
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
@@ -680,6 +679,37 @@ services:
       - ${DATADIR}/media/books/imports:/imports
     devices:
       - /dev/dri:/dev/dri
+    labels:
+      - dozzle
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
+  # Readarr - *arr for books
+  readarr:
+    container_name: readarr
+    hostname: readarr
+    image: lscr.io/linuxserver/readarr:nightly
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      - 0.0.0.0:8787:8787
+    logging:
+      driver: json-file
+      options:
+        max-file: ${DOCKERLOGGING_MAXFILE}
+        max-size: ${DOCKERLOGGING_MAXSIZE}
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - HAS_IPV6=false
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${USERDIR}/readarr:/config
+      - ${DATADIR}:/data
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
