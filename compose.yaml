@@ -25,8 +25,8 @@ services:
       lsio:
     ports:
       - 449:443
-      # - 89:80 # simply to allow for http to https redirect
-      # - 81:81 # Swag dashboard
+      # - 89:80 # if you need port 80
+      # - 81:81 # Swag dashboard LAN access
     logging:
       driver: json-file
       options:
@@ -236,12 +236,6 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     network_mode: "service:gluetun"
-    # networks:
-      # lsio:
-    # ports:
-      # - 0.0.0.0:9997:9997
-      # - 0.0.0.0:6887:6887
-      # - 0.0.0.0:6887:6887/udp
     logging:
       driver: json-file
       options:
@@ -517,11 +511,11 @@ services:
     networks:
       lsio:
     ports:
-      - 32400:32400
-      # - 0.0.0.0:32410:32410/udp
-      # - 0.0.0.0:32412:32412/udp
-      # - 0.0.0.0:32413:32413/udp
-      # - 0.0.0.0:32414:32414/udp
+      - 0.0.0.0:32400:32400
+      - 0.0.0.0:32410:32410/udp
+      - 0.0.0.0:32412:32412/udp
+      - 0.0.0.0:32413:32413/udp
+      - 0.0.0.0:32414:32414/udp
     logging:
       driver: json-file
       options:
@@ -672,44 +666,14 @@ services:
       - DRINODE=/dev/dri/renderD128
       - TITLE=BrunswickBooks
       - CLI_ARGS="--trusted-ips 192.168.0.0/16"
+      - CALIBRE_CACHE_DIRECTORY=/cache
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
-      - ${DATADIR}/media/books/imports:/imports
+      - ${USERDIR}/calibre/cache:/cache
     devices:
       - /dev/dri:/dev/dri
-    labels:
-      - dozzle
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
-  # Readarr - *arr for books
-  readarr:
-    container_name: readarr
-    hostname: readarr
-    image: lscr.io/linuxserver/readarr:nightly
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 0.0.0.0:8787:8787
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - HAS_IPV6=false
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${USERDIR}/readarr:/config
-      - ${DATADIR}:/data
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
