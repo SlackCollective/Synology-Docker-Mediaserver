@@ -508,14 +508,15 @@ services:
     hostname: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 0.0.0.0:32400:32400
-      - 0.0.0.0:32410:32410/udp
-      - 0.0.0.0:32412:32412/udp
-      - 0.0.0.0:32413:32413/udp
-      - 0.0.0.0:32414:32414/udp
+    network_mode: "host" #recommended. If you use it, comment out network below and ports
+    # networks:
+      # lsio:
+    # ports:
+      # - 0.0.0.0:32400:32400
+      # - 0.0.0.0:32410:32410/udp
+      # - 0.0.0.0:32412:32412/udp
+      # - 0.0.0.0:32413:32413/udp
+      # - 0.0.0.0:32414:32414/udp
     logging:
       driver: json-file
       options:
@@ -525,9 +526,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - VERSION=docker
-      - PLEX_PASS=${PLEX_PASS}
-      - ADVERTISE_IP=http://192.168.1.156:32400
+      - VERSION=latest
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
@@ -767,6 +766,10 @@ services:
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
       - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
+      - ROCKET_ENV=prod
+      - ROCKET_WORKERS=10
+      - LOG_LEVEL=error
+      - EXTENDED_LOGGING=true
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
