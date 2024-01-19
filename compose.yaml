@@ -3,12 +3,15 @@ networks:
   default:
     driver: bridge
   lsio:
+    name: lsio
     ipam:
       driver: default
       config:
         - subnet: "172.18.0.0/16"
           gateway: "172.18.0.1"
-    name: lsio
+    enable_ipv6: false
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
 
 ########################### SERVICES
 services:
@@ -46,9 +49,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/swag:/config
-      - ${USERDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -102,9 +103,10 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:9997:9997/tcp
-      - 0.0.0.0:6887:6887
-      # - 8888:8888/tcp # HTTP proxy
+      - 9997:9997/tcp # WebUI
+      - 6887:6887 # seeding port
+      # - 8888:8888/tcp # HTTP proxy (Probably not needed)
+      # - 8000:8000/tcp # HTTP control server (Probably not needed)
       # - 8388:8388/tcp # Shadowsocks
       # - 8388:8388/udp # Shadowsocks
     logging:
@@ -124,8 +126,8 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,172.17.0.0/16,172.18.0.0/16
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/gluetun:/gluetun
     labels:
       - dozzle
@@ -144,7 +146,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:88:80
+      - 88:80
     logging:
       driver: json-file
       options:
@@ -156,7 +158,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/organizr:/config
     labels:
       - dozzle
@@ -175,7 +176,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:9696:9696
+      - 9696:9696
     logging:
       driver: json-file
       options:
@@ -188,7 +189,6 @@ services:
       - UMASK=002
       - ARGS=
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/prowlarr:/config:rw
     labels:
       - dozzle
@@ -207,7 +207,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:9998:8080
+      - 9998:8080
     logging:
       driver: json-file
       options:
@@ -217,9 +217,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - HAS_IPV6=false
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
     labels:
@@ -248,7 +246,6 @@ services:
       - UMASK=002
       - WEBUI_PORT=9997
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
     labels:
@@ -295,7 +292,6 @@ services:
       - QBT_DIVIDER==
       - QBT_WIDTH=100
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/qbitmanage:/config
       - ${USERDIR}/qbittorrent/qBittorrent/BT_backup:/qbit_appdata # modify if needed
       - ${DATADIR}/torrents:/data/torrents # modify if needed
@@ -315,7 +311,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:7474:7474
+      - 7474:7474
     logging:
       driver: json-file
       options:
@@ -327,7 +323,6 @@ services:
       - AUTOBRR_HOST=0.0.0.0
     user: ${PUID}:${PGID}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/autobrr:/config
     labels:
       # - dozzle
@@ -345,7 +340,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:7441:7441
+      - 7441:7441
     logging:
       driver: json-file
       options:
@@ -355,7 +350,6 @@ services:
       - TZ=${TZ}
     user: ${PUID}:${PGID}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/omegabrr:/config
     labels:
       # - dozzle
@@ -374,7 +368,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:7878:7878
+      - 7878:7878
     logging:
       driver: json-file
       options:
@@ -385,7 +379,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
     labels:
@@ -404,7 +397,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8989:8989
+      - 8989:8989
     logging:
       driver: json-file
       options:
@@ -415,39 +408,8 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
-    labels:
-      - dozzle
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
-  # Bazarr – Subtitle Management
-  bazarr:
-    container_name: bazarr
-    hostname: bazarr
-    image: lscr.io/linuxserver/bazarr:latest
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 0.0.0.0:6767:6767
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${USERDIR}/bazarr:/config
-      - ${DATADIR}/media:/data/media
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -465,8 +427,8 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8265:8265
-      - 0.0.0.0:8266:8266
+      - 8265:8265
+      - 8266:8266
     logging:
       driver: json-file
       options:
@@ -488,7 +450,6 @@ services:
       - THREADS_WORKER_INIT_TIMEOUT=200000
       - gpus=all
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}:/app/server
       - ${USERDIR}/Tdarr/Configs:/app/configs
       - ${USERDIR}/Tdarr/Logs:/app/logs
@@ -512,11 +473,11 @@ services:
     # networks:
       # lsio:
     # ports:
-      # - 0.0.0.0:32400:32400
-      # - 0.0.0.0:32410:32410/udp
-      # - 0.0.0.0:32412:32412/udp
-      # - 0.0.0.0:32413:32413/udp
-      # - 0.0.0.0:32414:32414/udp
+      # - 32400:32400
+      # - 32410:32410/udp
+      # - 32412:32412/udp
+      # - 32413:32413/udp
+      # - 32414:32414/udp
     logging:
       driver: json-file
       options:
@@ -528,7 +489,6 @@ services:
       - TZ=${TZ}
       - VERSION=latest
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
       - ${DATADIR}/media:/transcode
@@ -551,7 +511,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8181:8181
+      - 8181:8181
     logging:
       driver: json-file
       options:
@@ -565,7 +525,6 @@ services:
       - ARGS=
       - DEBUG=no
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/tautulli:/config:rw
       - ${USERDIR}/plex:/plex:ro
     labels:
@@ -584,7 +543,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:5055:5055
+      - 5055:5055
     logging:
       driver: json-file
       options:
@@ -595,7 +554,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/overseerr:/config
       - ${DATADIR}/media:/data/media
     labels:
@@ -615,7 +573,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8084:8081
+      - 8084:8081
     logging:
       driver: json-file
       options:
@@ -650,8 +608,8 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8082:8080
-      - 0.0.0.0:8083:8081
+      - 8082:8080
+      - 8083:8081
     logging:
       driver: json-file
       options:
@@ -661,13 +619,11 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - HAS_IPV6=false
       - DRINODE=/dev/dri/renderD128
       - TITLE=BrunswickBooks
-      - CLI_ARGS="--trusted-ips 192.168.0.0/16"
+      - CLI_ARGS="--trusted-ips 192.168.1.0/24"
       - CALIBRE_CACHE_DIRECTORY=/cache
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
       - ${USERDIR}/calibre/cache:/cache
@@ -690,7 +646,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:9999:8080
+      - 9999:8080
     logging:
       driver: json-file
       options:
@@ -705,7 +661,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       # - dozzle
@@ -723,7 +678,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:5454:5454
+      - 5454:5454
     logging:
       driver: json-file
       options:
@@ -734,7 +689,6 @@ services:
       - DN_API_KEY=${NOTIFIARR}
       - USER=docker
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${USERDIR}/notifiarr:/config
     labels:
       # - dozzle
@@ -753,7 +707,7 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8269:80
+      - 8269:80
     logging:
       driver: json-file
       options:
@@ -766,12 +720,10 @@ services:
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
       - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
-      - ROCKET_ENV=prod
-      - ROCKET_WORKERS=10
+      - PUSH_RELAY_BASE_URI=https://push.bitwarden.com
       - LOG_LEVEL=error
-      - EXTENDED_LOGGING=true
+      - EXTENDED_LOGGING=false
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - ${VAULTDIR}:/data
     labels:
       - dozzle
