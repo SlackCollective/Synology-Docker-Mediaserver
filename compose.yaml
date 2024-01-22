@@ -207,7 +207,7 @@ services:
     networks:
       lsio:
     ports:
-      - 9998:8080
+      - 0.0.0.0:9998:8080
     logging:
       driver: json-file
       options:
@@ -217,6 +217,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - HAS_IPV6=false
     volumes:
       - ${USERDIR}/sabnzbd:/config
       - ${DATADIR}/usenet:/data/usenet:rw
@@ -720,7 +721,6 @@ services:
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
       - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
-      - PUSH_RELAY_BASE_URI=https://push.bitwarden.com
       - LOG_LEVEL=error
       - EXTENDED_LOGGING=false
     volumes:
