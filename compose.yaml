@@ -217,6 +217,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
       - HAS_IPV6=false
     volumes:
       - ${USERDIR}/sabnzbd:/config
@@ -231,7 +232,6 @@ services:
   # qbittorrent - torrent downloader with VPN
   qbittorrent:
     container_name: qbittorrent
-    # hostname: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
     restart: unless-stopped
     network_mode: "service:gluetun"
@@ -272,8 +272,8 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK=002
       - TZ=${TZ}
+      - UMASK=002
       - QBT_RUN=false
       - QBT_SCHEDULE=1440
       - QBT_CONFIG=config.yml
@@ -379,6 +379,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
     volumes:
       - ${USERDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -408,6 +409,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
     volumes:
       - ${USERDIR}/sonarr:/config
       - ${DATADIR}:/data
@@ -470,31 +472,35 @@ services:
     hostname: plex
     image: lscr.io/linuxserver/plex:latest
     restart: unless-stopped
-    network_mode: "host" #recommended. If you use it, comment out network below and ports
-    # networks:
-      # lsio:
-    # ports:
-      # - 32400:32400
-      # - 32410:32410/udp
-      # - 32412:32412/udp
-      # - 32413:32413/udp
-      # - 32414:32414/udp
+    # network_mode: "host" #recommended. If you use it, comment out network below and ports
+    networks:
+      lsio:
+    ports:
+      - 32400:32400
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
     logging:
       driver: json-file
       options:
         max-file: ${DOCKERLOGGING_MAXFILE}
         max-size: ${DOCKERLOGGING_MAXSIZE}
+    devices:
+      - /dev/dri:/dev/dri
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
       - VERSION=latest
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - gpus=all
     volumes:
       - ${USERDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
       - ${DATADIR}/media:/transcode
-    devices:
-      - /dev/dri:/dev/dri
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -512,7 +518,7 @@ services:
     networks:
       lsio:
     ports:
-      - 8181:8181
+      - 8182:8181
     logging:
       driver: json-file
       options:
@@ -554,6 +560,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
     volumes:
       - ${USERDIR}/overseerr:/config
       - ${DATADIR}/media:/data/media
@@ -603,14 +610,13 @@ services:
     container_name: calibre
     hostname: calibre
     image: lscr.io/linuxserver/calibre:latest
-    security_opt:
-      - seccomp:unconfined
     restart: unless-stopped
     networks:
       lsio:
     ports:
-      - 8082:8080
-      - 8083:8081
+      - 8082:8082
+      - 8181:8181
+      - 8085:8081
     logging:
       driver: json-file
       options:
@@ -620,16 +626,16 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DRINODE=/dev/dri/renderD128
-      - TITLE=BrunswickBooks
+      - UMASK=002
+      - CUSTOM_PORT=8082
+      - CUSTOM_HTTPS_PORT=8181
+      - TITLE=YourLibraryName
       - CLI_ARGS="--trusted-ips 192.168.1.0/24"
       - CALIBRE_CACHE_DIRECTORY=/cache
     volumes:
       - ${USERDIR}/calibre:/config
       - ${DATADIR}:/data
       - ${USERDIR}/calibre/cache:/cache
-    devices:
-      - /dev/dri:/dev/dri
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
@@ -718,13 +724,14 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - WEBSOCKET_ENABLED=true
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
       - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
       - LOG_LEVEL=error
       - EXTENDED_LOGGING=false
     volumes:
-      - ${VAULTDIR}:/data
+      - ${USERDIR}/vaultwarden:/data
     labels:
       - dozzle
       - org.hotio.pullio.notify=true
