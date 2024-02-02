@@ -91,33 +91,6 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  # Swag Certs Dumper - Extract LetsEncrypt Certificates - Traefik2 Compatible
-  # certdumper:
-    # image: humenius/traefik-certs-dumper:latest
-    # container_name: certdumper
-    # security_opt:
-      # - no-new-privileges:true
-    # restart: unless-stopped
-    # networks:
-      # lsio:
-    # volumes:
-      # - ${APPDIR}/traefik2/acme:/traefik:ro
-      # - ${DOCKERDIR}/certs:/output:rw
-      # - /var/run/docker.sock:/var/run/docker.sock:ro # Only needed if restarting containers (use Docker Socket Proxy instead)
-    # environment:
-      # - DOMAIN=${DOMAINNAME}
-      # - PUID=${PUID}
-      # - PGID=${PGID}
-      # - TZ=${TZ}
-    # labels:
-      ## Log viewer
-      # - dozzle
-      ## Updating and notifications
-      # - org.hotio.pullio.notify=true
-      # - org.hotio.pullio.update=true
-      # - org.hotio.pullio.discord.webhook=${DISCORD}
-      # - org.hotio.pullio.generic.webhook=${PULLIO}
-
   ############################# VPN
   # Gluetun - provider-agnostic VPN client
   gluetun:
