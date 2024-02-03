@@ -29,11 +29,6 @@ services:
       - 449:443
       # - 89:80 # if you need port 80
       - 81:81 # Swag dashboard LAN access
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -49,6 +44,7 @@ services:
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${APPDIR}/swag:/config
+      - ${APPDIR}/organizr/www/logs:/organizrlog:ro
     labels:
       ## Log viewer
       - dozzle
@@ -66,11 +62,6 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -112,11 +103,6 @@ services:
       # - 8000:8000/tcp # HTTP control server (Probably not needed)
       # - 8388:8388/tcp # Shadowsocks
       # - 8388:8388/udp # Shadowsocks
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -151,11 +137,6 @@ services:
       lsio:
     ports:
       - 88:80
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - fpm="true"
       - PUID=${PUID}
@@ -182,11 +163,6 @@ services:
       lsio:
     ports:
       - 9696:9696
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -214,11 +190,6 @@ services:
       lsio:
     ports:
       - 0.0.0.0:9998:8080
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -243,11 +214,6 @@ services:
     container_name: qbittorrent
     restart: unless-stopped
     network_mode: "service:gluetun"
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -273,11 +239,6 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -323,11 +284,6 @@ services:
       lsio:
     ports:
       - 7474:7474
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}
@@ -353,11 +309,6 @@ services:
       lsio:
     ports:
       - 7441:7441
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}
@@ -382,11 +333,6 @@ services:
       lsio:
     ports:
       - 7878:7878
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -413,11 +359,6 @@ services:
       lsio:
     ports:
       - 8989:8989
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -446,11 +387,6 @@ services:
     ports:
       - 8265:8265
       - 8266:8266
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     devices: # optional (used if Syno has Intel CPU, for HW transcoding)
       - /dev/dri:/dev/dri
     environment:
@@ -498,11 +434,6 @@ services:
       - 32413:32413/udp
       - 32414:32414/udp
       - 32469:32469/tcp
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     devices:
       - /dev/dri:/dev/dri
     environment:
@@ -537,11 +468,6 @@ services:
       lsio:
     ports:
       - 8182:8181
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -570,11 +496,6 @@ services:
       lsio:
     ports:
       - 5055:5055
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -602,11 +523,6 @@ services:
       lsio:
     ports:
       - 8084:8081
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - UID=${PUID}
       - GID=${PGID}
@@ -638,11 +554,6 @@ services:
       - 8082:8082
       - 8181:8181
       - 8085:8081
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -676,11 +587,6 @@ services:
       lsio:
     ports:
       - 9999:8080
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - DOZZLE_BASE=/
       - DOZZLE_LEVEL=error
@@ -709,11 +615,6 @@ services:
       lsio:
     ports:
       - 5454:5454
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - TZ=${TZ}
       - DN_API_KEY=${NOTIFIARR}
@@ -739,11 +640,6 @@ services:
       lsio:
     ports:
       - 8269:8269
-    logging:
-      driver: json-file
-      options:
-        max-file: ${DOCKERLOGGING_MAXFILE}
-        max-size: ${DOCKERLOGGING_MAXSIZE}
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
