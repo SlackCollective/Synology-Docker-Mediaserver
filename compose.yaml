@@ -1,17 +1,16 @@
 ########################### NETWORKS
-# You may customize the network subnets (192.168.x.0/24) below as you please.
 networks:
-  default:
-    driver: bridge
-    enable_ipv6: false
   lsio:
     name: lsio
-    ipam:
-      driver: default
-      config:
-        - subnet: "172.18.1.0/24"
-          gateway: "172.18.1.1"
+    driver: bridge
     enable_ipv6: false
+    driver_opts:
+      parent: eth0
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.5.254
+          ip_range: 172.28.5.0/24
 
 ########################### SERVICES
 services:
@@ -44,7 +43,9 @@ services:
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${APPDIR}/swag:/config
-      - ${APPDIR}/organizr/www/logs:/organizrlog:ro
+      - ${APPDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
+      - ${APPDIR}/organizr/log:/organizrlog:ro
+      - ${APPDIR}/swag/log/nginx:/dashboard/logs:ro
     labels:
       ## Log viewer
       - dozzle
@@ -93,12 +94,12 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
-    restart: unless-stopped
+    restart: always
     networks:
       lsio:
     ports:
       - 9997:9997/tcp # qBittorrent WebUI
-      - 6887:6887 # seeding port
+      - 49777:49777 # qBittorrent seeding port
       # - 8888:8888/tcp # HTTP proxy (Probably not needed)
       # - 8000:8000/tcp # HTTP control server (Probably not needed)
       # - 8388:8388/tcp # Shadowsocks
@@ -328,6 +329,9 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    depends_on:
+      - sabnzbd
+      - qbittorrent
     restart: unless-stopped
     networks:
       lsio:
@@ -355,6 +359,9 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     restart: unless-stopped
+    depends_on:
+      - sabnzbd
+      - qbittorrent
     networks:
       lsio:
     ports:
@@ -423,17 +430,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     restart: unless-stopped
-    # network_mode: "host" #recommended, and if using, comment out network and ports
-    networks:
-      lsio:
-    ports:
-      - 3005:3005/tcp
-      - 32400:32400/tcp
-      - 32410:32410/udp
-      - 32412:32412/udp
-      - 32413:32413/udp
-      - 32414:32414/udp
-      - 32469:32469/tcp
+    network_mode: "host"
     devices:
       - /dev/dri:/dev/dri
     environment:
@@ -610,6 +607,7 @@ services:
   notifiarr:
     image: golift/notifiarr:latest
     container_name: notifiarr
+    hostname: notifiarr #must be set for this container, can by anything
     restart: unless-stopped
     networks:
       lsio:
