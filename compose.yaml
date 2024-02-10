@@ -94,7 +94,7 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
-    restart: always
+    restart: unless-stopped
     networks:
       lsio:
     ports:
@@ -332,6 +332,7 @@ services:
     depends_on:
       - sabnzbd
       - qbittorrent
+      - prowlarr
     restart: unless-stopped
     networks:
       lsio:
@@ -362,6 +363,7 @@ services:
     depends_on:
       - sabnzbd
       - qbittorrent
+      - prowlarr
     networks:
       lsio:
     ports:
@@ -461,6 +463,8 @@ services:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
     restart: unless-stopped
+    depends_on:
+      - plex
     networks:
       lsio:
     ports:
