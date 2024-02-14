@@ -117,6 +117,7 @@ services:
       - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
       - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
     volumes:
       - ${APPDIR}/gluetun:/gluetun
     labels:
@@ -407,10 +408,7 @@ services:
       - webUIPort=8265
       - internalNode=true
       - nodeID=TdarrNode
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
       - THREADS_WORKER_INIT_TIMEOUT=200000
-      - gpus=all
     volumes:
       - ${APPDIR}:/app/server
       - ${APPDIR}/Tdarr/Configs:/app/configs
@@ -440,10 +438,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
-      - VERSION=latest
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
-      - gpus=all
+      - VERSION=docker
     volumes:
       - ${APPDIR}/plex:/config:rw
       - ${DATADIR}/media:/data/media:rw
