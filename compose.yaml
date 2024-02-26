@@ -110,16 +110,11 @@ services:
       - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=wireguard
-      - VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
-      - VPN_ENDPOINT_PORT=${VPN_ENDPOINT_PORT}
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
     volumes:
       - ${APPDIR}/gluetun:/gluetun
+      - ${APPDIR}/gluetun/wireguard/wg0.conf:/gluetun/wireguard/wg0.conf
     labels:
       ## Log viewer
       - dozzle
@@ -539,6 +534,36 @@ services:
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
   ############################# BOOK LIBRARY MANAGEMENT
+  # Readarr - Books
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    restart: unless-stopped
+    depends_on:
+      - sabnzbd
+      - qbittorrent
+      - prowlarr
+    networks:
+      lsio:
+    ports:
+      - 8787:8787
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - UMASK=002
+    volumes:
+      - ${APPDIR}/readarr:/config
+      - ${DATADIR}:/data
+    labels:
+      ## Log viewer
+      - dozzle
+      ## Updating and notifications
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
   # Calibre – Content server
   calibre:
     image: lscr.io/linuxserver/calibre:latest
@@ -547,9 +572,9 @@ services:
     networks:
       lsio:
     ports:
-      - 8082:8082
-      - 8181:8181
-      - 8085:8081
+      - 8082:8082 #Calibre desktop gui
+      - 8181:8181 #Calibre desktop gui HTTPS
+      - 8085:8081 #Calibre content server gui
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
