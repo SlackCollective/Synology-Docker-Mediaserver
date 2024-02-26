@@ -98,10 +98,9 @@ services:
     networks:
       lsio:
     ports:
-      - 9997:9997/tcp # qBittorrent WebUI
-      - 49777:49777 # qBittorrent seeding port
-      # - 8888:8888/tcp # HTTP proxy (Probably not needed)
-      # - 8000:8000/tcp # HTTP control server (Probably not needed)
+      - 20144:8000 # Gluetun Control server    
+      - 9997:9997 # qBittorrent WebUI
+      # - 8888:8888/tcp # HTTP proxy
       # - 8388:8388/tcp # Shadowsocks
       # - 8388:8388/udp # Shadowsocks
     environment:
@@ -110,8 +109,11 @@ services:
       - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=wireguard
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,172.20.0.0/16,192.168.1.0/24
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
+      - HTTPPROXY=off #change to on if you wish to enable
+      - SHADOWSOCKS=off #change to on if you wish to enable
+      # - FIREWALL_VPN_INPUT_PORTS=12345 #uncomment/edit if your provider offers port fwd
     volumes:
       - ${APPDIR}/gluetun:/gluetun
       - ${APPDIR}/gluetun/wireguard/wg0.conf:/gluetun/wireguard/wg0.conf
@@ -211,6 +213,8 @@ services:
     container_name: qbittorrent
     restart: unless-stopped
     network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -228,12 +232,14 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+    
   # qbit_manage - torrent client management
   qbit_manage:
     image: ghcr.io/hotio/qbitmanage
     container_name: qbitmanage
     restart: unless-stopped
+    depends_on:
+      - qbittorrent
     networks:
       lsio:
     environment:
