@@ -26,7 +26,7 @@ services:
       lsio:
     ports:
       - 449:443
-      # - 89:80 # if you need port 80
+      - 89:80 # if you need port 80
       - 81:81 # Swag dashboard LAN access
     environment:
       - PUID=${PUID}
@@ -100,6 +100,8 @@ services:
     ports:
       - 20144:8000 # Gluetun Control server    
       - 9997:9997 # qBittorrent WebUI
+      - 49777:49777 # qBittorrent seeding port
+      - 49777:49777/udp # qBittorrent seeding port
       # - 8888:8888/tcp # HTTP proxy
       # - 8388:8388/tcp # Shadowsocks
       # - 8388:8388/udp # Shadowsocks
@@ -109,11 +111,14 @@ services:
       - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=wireguard
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,172.20.0.0/16,192.168.1.0/24
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
+      - VPN_ENDPOINT_IP=51.159.99.137
+      - VPN_ENDPOINT_PORT=253
+      - VPN_INTERFACE=tun0
       - HTTPPROXY=off #change to on if you wish to enable
       - SHADOWSOCKS=off #change to on if you wish to enable
-      # - FIREWALL_VPN_INPUT_PORTS=12345 #uncomment/edit if your provider offers port fwd
+      # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
     volumes:
       - ${APPDIR}/gluetun:/gluetun
       - ${APPDIR}/gluetun/wireguard/wg0.conf:/gluetun/wireguard/wg0.conf
@@ -224,6 +229,7 @@ services:
     volumes:
       - ${APPDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
+      - ${APPDIR}/qbittorrent/mam/cookies.sh:/etc/cont-init.d/99-mam-cookies
     labels:
       ## Log viewer
       - dozzle
