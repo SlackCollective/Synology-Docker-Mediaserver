@@ -103,7 +103,7 @@ services:
       - 49777:49777 # qBittorrent seeding port
       - 49777:49777/udp # qBittorrent seeding port
       # - 8888:8888/tcp # HTTP proxy
-      # - 8388:8388/tcp # Shadowsocks
+      # - 8388:8388/tcp # Shadows
       # - 8388:8388/udp # Shadowsocks
     environment:
       - PUID=${PUID}
@@ -111,12 +111,15 @@ services:
       - TZ=${TZ}
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=wireguard
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24
-      - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
       - VPN_INTERFACE=tun0
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32
+      # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
+      # - HEALTH_TARGET_ADDRESS=cloudflare.com:443
+      # - HEALTH_SERVER_ADDRESS=127.0.0.1:9799
       - HTTPPROXY=off #change to on if you wish to enable
       - SHADOWSOCKS=off #change to on if you wish to enable
-      # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
     volumes:
       - ${APPDIR}/gluetun:/gluetun
       - ${APPDIR}/gluetun/wireguard/wg0.conf:/gluetun/wireguard/wg0.conf
@@ -236,6 +239,7 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
+      - deunhealth.restart.on.unhealthy=true
     
   # qbit_manage - torrent client management
   qbit_manage:
@@ -608,7 +612,33 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  ############################# SYSTEM MANAGEMENT/MONITORING  
+  ############################# SYSTEM MANAGEMENT/MONITORING
+  # DeUnhealth - Restart unhealthy containers, e.g. containers depending on VPN
+  deunhealth:
+    image: qmcgaw/deunhealth
+    container_name: deunhealth
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      lsio:
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - LOG_LEVEL=error
+      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      ## Log viewer
+      # - dozzle
+      ## Updating and notifications
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
     image: amir20/dozzle
