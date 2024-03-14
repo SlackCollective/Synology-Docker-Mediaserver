@@ -82,6 +82,46 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
+  ############################# Fail2ban
+  # fail2ban - block IP ranges/countries
+  fail2ban:
+    image: lscr.io/linuxserver/fail2ban:latest
+    container_name: fail2ban
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERBOSITY=-vv #optional
+    volumes:
+      - ${APPDIR}/swag:/config
+      - /var/log:/var/log:ro
+      - ${APPDIR}/notifiarr:/remotelogs/notifiarr:ro #optional
+      - ${APPDIR}/organizr/log:/remotelogs/organizr:ro #optional
+      - ${APPDIR}/overseerr/logs:/remotelogs/overseerr:ro #optional
+      - ${APPDIR}/prowlarr/logs:/remotelogs/prowlarr:ro #optional
+      - ${APPDIR}/qbitmanage/logs:/remotelogs/qbitmanage:ro #optional
+      - ${APPDIR}/qbittorrent/qBittorrent/logs:/remotelogs/qbittorrent:ro #optional
+      - ${APPDIR}/radarr/logs:/remotelogs/radarr:ro #optional
+      - ${APPDIR}/sonarr/logs:/remotelogs/sonarr:ro #optional
+      - ${APPDIR}/readarr/logs:/remotelogs/readarr:ro #optional
+      - ${APPDIR}/sabnzbd/logs:/remotelogs/sabnzbd:ro #optional
+      - ${APPDIR}/swag/log/nginx:/remotelogs/nginx:ro #optional
+      - ${APPDIR}/tautulli/logs:/remotelogs/tautulli:ro #optional
+      - ${APPDIR}/Tdarr/Logs:/remotelogs/tdarr:ro #optional
+    labels:
+      ## Log viewer
+      - dozzle
+      ## Updating and notifications
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+
   ############################# VPN
   # Gluetun - provider-agnostic VPN client
   gluetun:
