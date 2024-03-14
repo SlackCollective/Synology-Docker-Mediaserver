@@ -96,7 +96,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - VERBOSITY=-vv #optional
+      - VERBOSITY=-q #optional
     volumes:
       - ${APPDIR}/swag:/config
       - /var/log:/var/log:ro
@@ -115,7 +115,7 @@ services:
       - ${APPDIR}/Tdarr/Logs:/remotelogs/tdarr:ro #optional
     labels:
       ## Log viewer
-      - dozzle
+      # - dozzle
       ## Updating and notifications
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
