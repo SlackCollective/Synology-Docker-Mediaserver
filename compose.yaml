@@ -26,7 +26,7 @@ services:
       lsio:
     ports:
       - 449:443
-      - 89:80 # if you need port 80
+      - 89:80 # port 80 needed for https redirection
       - 81:81 # Swag dashboard LAN access
     environment:
       - PUID=${PUID}
@@ -44,7 +44,7 @@ services:
     volumes:
       - ${APPDIR}/swag:/config
       - ${APPDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
-      - ${APPDIR}/swag/log:/dashboard/logs:ro
+      - ${APPDIR}/swag/log/nginx:/dashboard/logs:ro
     labels:
       ## Log viewer
       - dozzle
@@ -73,46 +73,6 @@ services:
       - DELETE_ON_STOP=false
       - DNS_SERVER=1.1.1.1
       - CRON="@daily"
-    labels:
-      ## Log viewer
-      # - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
-  ############################# Fail2ban
-  # fail2ban - block IP ranges/countries
-  fail2ban:
-    image: lscr.io/linuxserver/fail2ban:latest
-    container_name: fail2ban
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    network_mode: host
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - VERBOSITY=-q #optional
-    volumes:
-      - ${APPDIR}/swag:/config
-      - /var/log:/var/log:ro
-      - ${APPDIR}/notifiarr:/remotelogs/notifiarr:ro #optional
-      - ${APPDIR}/organizr/log:/remotelogs/organizr:ro #optional
-      - ${APPDIR}/overseerr/logs:/remotelogs/overseerr:ro #optional
-      - ${APPDIR}/prowlarr/logs:/remotelogs/prowlarr:ro #optional
-      - ${APPDIR}/qbitmanage/logs:/remotelogs/qbitmanage:ro #optional
-      - ${APPDIR}/qbittorrent/qBittorrent/logs:/remotelogs/qbittorrent:ro #optional
-      - ${APPDIR}/radarr/logs:/remotelogs/radarr:ro #optional
-      - ${APPDIR}/sonarr/logs:/remotelogs/sonarr:ro #optional
-      - ${APPDIR}/readarr/logs:/remotelogs/readarr:ro #optional
-      - ${APPDIR}/sabnzbd/logs:/remotelogs/sabnzbd:ro #optional
-      - ${APPDIR}/swag/log/nginx:/remotelogs/nginx:ro #optional
-      - ${APPDIR}/tautulli/logs:/remotelogs/tautulli:ro #optional
-      - ${APPDIR}/Tdarr/Logs:/remotelogs/tdarr:ro #optional
     labels:
       ## Log viewer
       # - dozzle
@@ -300,28 +260,12 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
-      - QBT_RUN=false
-      - QBT_SCHEDULE=1440
-      - QBT_CONFIG=config.yml
-      - QBT_LOGFILE=activity.log
-      - QBT_CROSS_SEED=false
-      - QBT_RECHECK=false
-      - QBT_CAT_UPDATE=false
-      - QBT_TAG_UPDATE=true
-      - QBT_REM_UNREGISTERED=false
-      - QBT_REM_ORPHANED=false
-      - QBT_TAG_TRACKER_ERROR=false
-      - QBT_TAG_NOHARDLINKS=false
-      - QBT_SHARE_LIMITS=false
-      - QBT_SKIP_CLEANUP=false
-      - QBT_DRY_RUN=false
+      ## Only including variables with different settings from default
       - QBT_LOG_LEVEL=ERROR
-      - QBT_DIVIDER==
-      - QBT_WIDTH=100
     volumes:
-      - ${APPDIR}/qbitmanage:/config
-      - ${APPDIR}/qbittorrent/qBittorrent/BT_backup:/qbit_appdata # modify if needed
-      - ${DATADIR}/torrents:/data/torrents # modify if needed
+      - ${APPDIR}/qbitmanage:/config:rw
+      - ${APPDIR}/qbittorrent/qBittorrent/BT_backup:/qbit_appdata
+      - ${DATADIR}/torrents:/data/torrents:rw # same as qbittorrent download dir
     labels:
       ## Log viewer
       # - dozzle
