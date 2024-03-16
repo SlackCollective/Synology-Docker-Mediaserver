@@ -245,7 +245,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       - deunhealth.restart.on.unhealthy=true
-    
+
   # qbit_manage - torrent client management
   qbit_manage:
     image: ghcr.io/hotio/qbitmanage
@@ -261,20 +261,25 @@ services:
       - TZ=${TZ}
       - UMASK=002
       ## Only including variables with different settings from default
+      - QBT_CAT_UPDATE=true
+      - QBT_TAG_UPDATE=true
+      - QBT_TAG_TRACKER_ERROR=true
+      - QBT_TAG_NOHARDLINKS=true
+      - QBT_SHARE_LIMITS=true
       - QBT_LOG_LEVEL=ERROR
     volumes:
       - ${APPDIR}/qbitmanage:/config:rw
-      - ${APPDIR}/qbittorrent/qBittorrent/BT_backup:/qbit_appdata
+      - ${APPDIR}/qbittorrent/:/qbittorrent/:ro
       - ${DATADIR}/torrents:/data/torrents:rw # same as qbittorrent download dir
     labels:
       ## Log viewer
-      # - dozzle
+      - dozzle
       ## Updating and notifications
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-      
+    
   # autobrr - torrent RSS downloader
   autobrr:
     image: ghcr.io/autobrr/autobrr:latest
