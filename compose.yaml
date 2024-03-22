@@ -339,6 +339,29 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
+
+  # omegabrr - auto-generate filters for autobrr based on *arr subscriptions
+  omegabrr:
+    image: ghcr.io/autobrr/omegabrr:latest
+    container_name: omegabrr
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      - 7441:7441
+    user: ${PUID}:${PGID}
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${APPDIR}/omegabrr:/config
+    labels:
+      ## Log viewer
+      # - dozzle
+      ## Updating and notifications
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
       
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
