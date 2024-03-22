@@ -114,7 +114,7 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      # - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32 #only needed for proxy
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32 #needs to be enabled for *arr connections
       # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
       - HEALTH_TARGET_ADDRESS=cloudflare.com:443
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
