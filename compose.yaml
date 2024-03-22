@@ -21,6 +21,12 @@ services:
     container_name: swag
     cap_add:
       - NET_ADMIN
+    healthcheck:
+      test: curl --fail https://cloudflare.com:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -53,7 +59,9 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+            
   ############################# CLOUDFLARE DDNS AND SSL      
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
@@ -81,7 +89,7 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      
   ############################# VPN
   # Gluetun - provider-agnostic VPN client
   gluetun:
@@ -114,7 +122,7 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32 #needs to be enabled for *arr connections
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32 #needed for *Arr connections
       # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
       - HEALTH_TARGET_ADDRESS=cloudflare.com:443
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
@@ -134,12 +142,20 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
   organizr:
     image: organizr/organizr
     container_name: organizr
+    healthcheck:
+      test: curl --fail https://${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -160,12 +176,20 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   ############################# INDEXERS
   # Prowlarr - Hydra and Jackett combined
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    healthcheck:
+      test: curl --fail https://prowlarr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -187,12 +211,20 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   ############################# DOWNLOADERS
   # SABnzbd - nzb downloader
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
+    healthcheck:
+      test: curl --fail https://sabnzbd.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -215,11 +247,19 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # qbittorrent - torrent downloader with VPN
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    healthcheck:
+      test: curl --fail https://qbittorrent.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     network_mode: "service:gluetun"
     sysctls:
@@ -244,8 +284,9 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-      - deunhealth.restart.on.unhealthy=true
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # qbit_manage - torrent client management
   qbit_manage:
     image: bobokun/qbit_manage
@@ -273,7 +314,7 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-    
+        
   # autobrr - torrent RSS downloader
   autobrr:
     image: ghcr.io/autobrr/autobrr:latest
@@ -298,35 +339,18 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
-  # omegabrr - auto-generate filters for autobrr based on *arr subscriptions
-  omegabrr:
-    image: ghcr.io/autobrr/omegabrr:latest
-    container_name: omegabrr
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 7441:7441
-    user: ${PUID}:${PGID}
-    environment:
-      - TZ=${TZ}
-    volumes:
-      - ${APPDIR}/omegabrr:/config
-    labels:
-      ## Log viewer
-      # - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      
   ############################# MEDIA SEARCH/INDEX
   # Radarr - Movies
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    healthcheck:
+      test: curl --fail https://radarr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     depends_on:
       sabnzbd:
         condition: service_started
@@ -355,11 +379,19 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # Sonarr - TV
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    healthcheck:
+      test: curl --fail https://sonarr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     depends_on:
       sabnzbd:
         condition: service_started
@@ -388,11 +420,19 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # Tdarr - Video conversion
   tdarr:
     image: haveagitgat/tdarr:latest
     container_name: tdarr
+    healthcheck:
+      test: curl --fail https://tdarr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     privileged: true
     restart: unless-stopped
     networks:
@@ -426,12 +466,20 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   ############################# HOME THEATRE
   # Plex - Media Player
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
+    healthcheck:
+      test: curl --fail http://172.28.5.254:32400/web || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
     restart: unless-stopped
     network_mode: "host"
     devices:
@@ -454,12 +502,20 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
+      ## Restart unhealthy container
+      - autoheal=true
 
   ############################# PLEX MONITORING/MANAGEMENT
   # Tautulli - Media play and user monitoring
   tautulli:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
+    healthcheck:
+      test: curl --fail https://tautulli.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     depends_on:
       plex:
@@ -486,11 +542,19 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # Overseer - Allows Plex users to request media
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
+    healthcheck:
+      test: curl --fail https://overseerr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     depends_on:
       - plex
@@ -514,7 +578,9 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   ############################# INTERNET VIDEO DOWNLOADER
   # Metube – Self-hosted YT downloader with GUI
   metube:
@@ -543,12 +609,18 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      
   ############################# BOOK LIBRARY MANAGEMENT
   # Readarr - Books
   readarr:
     image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
+    healthcheck:
+      test: curl --fail https://readarr.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     depends_on:
       sabnzbd:
@@ -577,11 +649,19 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+      
   # Calibre – Content server
   calibre:
     image: lscr.io/linuxserver/calibre:latest
     container_name: calibre
+    healthcheck:
+      test: curl --fail http://calibre:8082 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -611,34 +691,35 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      ## Restart unhealthy container
+      - autoheal=true
+            
   ############################# SYSTEM MANAGEMENT/MONITORING
-  # DeUnhealth - Restart unhealthy containers, e.g. containers depending on VPN
-  deunhealth:
-    image: qmcgaw/deunhealth
-    container_name: deunhealth
-    security_opt:
-      - no-new-privileges:true
-    restart: unless-stopped
+  # Autoheal - Restart unhealthy containers, e.g. containers depending on VPN
+  autoheal:
+    image: willfarrell/autoheal:latest
+    container_name: autoheal
+    restart: always
     networks:
       lsio:
+    deploy:
+      replicas: 1
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - LOG_LEVEL=error
-      - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       ## Log viewer
-      # - dozzle
+      - dozzle
       ## Updating and notifications
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
     image: amir20/dozzle
@@ -667,7 +748,7 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-
+      
   # Notifiarr - update ARR profiles
   notifiarr:
     image: golift/notifiarr:latest
@@ -698,6 +779,12 @@ services:
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
+    healthcheck:
+      test: curl --fail https://vaultwarden.${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       lsio:
@@ -723,3 +810,5 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
+      ## Restart unhealthy container
+      - autoheal=true
