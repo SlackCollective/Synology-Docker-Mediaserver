@@ -143,8 +143,8 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
-      
+      # - autoheal=true
+
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
   organizr:
@@ -254,24 +254,22 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
     healthcheck:
       test: curl --fail https://qbittorrent.${DOMAINNAME}:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
       start_period: 60s
-    restart: unless-stopped
-    network_mode: "service:gluetun"
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    depends_on:
-      - gluetun
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
       - WEBUI_PORT=9997
+      - TORRENTING_PORT=49777
     volumes:
       - ${APPDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
@@ -456,7 +454,7 @@ services:
       timeout: 30s
       retries: 3
       start_period: 60s
-    privileged: true
+    # privileged: true
     restart: unless-stopped
     networks:
       lsio:
@@ -732,6 +730,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - WEBHOOK_URL="${DISCORD}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
