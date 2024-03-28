@@ -105,7 +105,7 @@ services:
     networks:
       lsio:
     ports:
-      - 20144:8000 # Gluetun Control server    
+      # - 20144:8000 # Gluetun Control server    
       - 9997:9997 # qBittorrent WebUI
       - 49777:49777 # qBittorrent seeding port
       - 49777:49777/udp # qBittorrent seeding port
@@ -122,11 +122,11 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24,10.101.26.198/32 #needed for *Arr connections
+      - FIREWALL_OUTBOUND_SUBNETS=172.28.0.0/16,192.168.1.0/24 #needed for *Arr connections
       # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
       - HEALTH_TARGET_ADDRESS=cloudflare.com:443
       - HEALTH_SERVER_ADDRESS=127.0.0.1:9999
-      - HEALTH_VPN_DURATION_INITIAL=6s
+      - HEALTH_VPN_DURATION_INITIAL=120s
       - HEALTH_VPN_DURATION_ADDITION=5s
       - HEALTH_SUCCESS_WAIT_DURATION=5s
       - HTTPPROXY=off #change to on if you wish to enable
