@@ -90,30 +90,6 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
-  # FlareSolverr - proxy for Cloudflare (needed for EXT Torrents)
-  flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:latest
-    container_name: flaresolverr
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 8191:8191
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - LOG_LEVEL=error
-      # - CAPTCHA_SOLVER=
-    labels:
-      ## Log viewer
-      # - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
   ############################# VPN
   # Gluetun - provider-agnostic VPN client
   gluetun:
