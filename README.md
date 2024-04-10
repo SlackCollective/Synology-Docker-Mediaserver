@@ -9,6 +9,7 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 * swag
 * cloudflare-ddns
 * gluetun
+* flaresolverr
 ### FRONTEND/AUTH
 * organizr
 ### INDEXERS
@@ -16,9 +17,11 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 ### DOWNLOADERS
 * sabnzbd
 * qbittorrent
+### TORRENT MANAGEMENT
 * qbit-manage
 * autobrr
 * omegabrr
+* cross-seed
 ### MEDIA SEARCH
 * sonarr
 * radarr
