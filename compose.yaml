@@ -164,8 +164,6 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-      ## Restart unhealthy container
-      # - autoheal=true
 
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
@@ -276,16 +274,16 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    healthcheck:
+      test: curl --fail https://${DOMAINNAME}:443 || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
     network_mode: "service:gluetun"
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
-    healthcheck:
-      test: curl --fail https://qbittorrent.${DOMAINNAME}:443 || exit 1
-      interval: 60s
-      timeout: 40s
-      retries: 3
-      start_period: 120s
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -306,7 +304,24 @@ services:
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
       - autoheal=true
-      
+
+  # cross-seed - allows seeding across multiple trackers
+  cross-seed:
+    image: ghcr.io/cross-seed/cross-seed
+    container_name: cross-seed
+    command: search # this enables the search mode, change to daemon to specifically run the daemon
+    restart: "no" # make sure to not enable it in search mode, otherwise it will keep rerunning constantly
+    networks:
+      lsio:
+    ports:
+      - 2468:2468 # you'll need this for daemon mode only
+    user: ${PUID}:${PGID}
+    volumes:
+      - ${APPDIR}/crosseed:/config
+      - ${APPDIR}/qbittorrent/qBittorrent/BT_backup:/torrents:ro # your torrent clients .torrent cache, can and should be mounted read-only (e.g. qbit: `BT_Backup` | deluge: `state` | transmission: `transmission/torrents` | rtorrent: session dir from `.rtorrent.rc`)
+      - ${DATADIR}/torrents/completed:/cross-seeds
+      - ${DATADIR}:/data
+
   # qbit_manage - torrent client management
   qbit_manage:
     image: bobokun/qbit_manage
