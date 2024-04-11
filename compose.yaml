@@ -61,6 +61,49 @@ services:
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
       - autoheal=true
+
+  ############################# SOCKET PROXY - to avoid exposing docker.sock
+  socket-proxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: socket-proxy
+    restart: unless-stopped
+    networks:
+      lsio:
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - ALLOW_START=0 #optional
+      - ALLOW_STOP=0 #optional
+      - ALLOW_RESTARTS=0 #optional
+      - AUTH=0 #optional
+      - BUILD=0 #optional
+      - COMMIT=0 #optional
+      - CONFIGS=0 #optional
+      - CONTAINERS=1 #optional
+      - DISTRIBUTION=0 #optional
+      - EVENTS=1 #optional
+      - EXEC=0 #optional
+      - IMAGES=0 #optional
+      - INFO=0 #optional
+      - NETWORKS=0 #optional
+      - NODES=0 #optional
+      - PING=1 #optional
+      - POST=0 #optional
+      - PLUGINS=0 #optional
+      - SECRETS=0 #optional
+      - SERVICES=0 #optional
+      - SESSION=0 #optional
+      - SWARM=0 #optional
+      - SYSTEM=0 #optional
+      - TASKS=0 #optional
+      - VERSION=1 #optional
+      - VOLUMES=0 #optional
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    read_only: true
+    tmpfs:
+      - /run
             
   ############################# CLOUDFLARE DDNS AND SSL      
   # Cloudflare DDNS - Dynamic DNS Updater
@@ -131,7 +174,6 @@ services:
       - SHADOWSOCKS=off #change to on if you wish to enable
     volumes:
       - ${APPDIR}/gluetun:/gluetun
-      # - ${APPDIR}/gluetun/wireguard/wg0.conf:/gluetun/wireguard/wg0.conf
     labels:
       ## Log viewer
       - dozzle
@@ -744,8 +786,9 @@ services:
       - TZ=${TZ}
       - AUTOHEAL_CONTAINER_LABEL=autoheal
       - WEBHOOK_URL="${DISCORD}"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - DOCKER_HOST=tcp://socket-proxy:2375
+    # volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
     labels:
       ## Log viewer
       # - dozzle
@@ -773,8 +816,9 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - DOCKER_HOST=tcp://socket-proxy:2375
+    # volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock
     labels:
       ## Log viewer
       # - dozzle
