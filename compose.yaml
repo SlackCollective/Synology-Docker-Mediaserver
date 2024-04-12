@@ -60,50 +60,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
-
-  ############################# SOCKET PROXY - to avoid exposing docker.sock
-  socket-proxy:
-    image: lscr.io/linuxserver/socket-proxy:latest
-    container_name: socket-proxy
-    restart: unless-stopped
-    networks:
-      lsio:
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - ALLOW_START=0 #optional
-      - ALLOW_STOP=0 #optional
-      - ALLOW_RESTARTS=0 #optional
-      - AUTH=0 #optional
-      - BUILD=0 #optional
-      - COMMIT=0 #optional
-      - CONFIGS=0 #optional
-      - CONTAINERS=1 #optional
-      - DISTRIBUTION=0 #optional
-      - EVENTS=1 #optional
-      - EXEC=0 #optional
-      - IMAGES=0 #optional
-      - INFO=0 #optional
-      - NETWORKS=0 #optional
-      - NODES=0 #optional
-      - PING=1 #optional
-      - POST=0 #optional
-      - PLUGINS=0 #optional
-      - SECRETS=0 #optional
-      - SERVICES=0 #optional
-      - SESSION=0 #optional
-      - SWARM=0 #optional
-      - SYSTEM=0 #optional
-      - TASKS=0 #optional
-      - VERSION=1 #optional
-      - VOLUMES=0 #optional
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    read_only: true
-    tmpfs:
-      - /run
+      - deunhealth.restart.on.unhealthy=true
             
   ############################# CLOUDFLARE DDNS AND SSL      
   # Cloudflare DDNS - Dynamic DNS Updater
@@ -215,7 +172,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   ############################# INDEXERS
   # Prowlarr - Hydra and Jackett combined
@@ -250,7 +207,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   ############################# DOWNLOADERS
   # SABnzbd - nzb downloader
@@ -286,7 +243,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   # qbittorrent - torrent downloader with VPN
   qbittorrent:
@@ -321,14 +278,14 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
 
   # cross-seed - allows seeding across multiple trackers
   cross-seed:
     image: ghcr.io/cross-seed/cross-seed
     container_name: cross-seed
-    command: search # this enables the search mode, change to daemon to specifically run the daemon
-    restart: "no" # make sure to not enable it in search mode, otherwise it will keep rerunning constantly
+    command: daemon # this enables the search mode, change to daemon to specifically run the daemon
+    restart: unless-stopped
     networks:
       lsio:
     ports:
@@ -456,7 +413,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   # Sonarr - TV
   sonarr:
@@ -497,7 +454,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   # Tdarr - Video conversion
   tdarr:
@@ -543,7 +500,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   ############################# HOME THEATRE
   # Plex - Media Player
@@ -579,7 +536,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
 
   ############################# PLEX MONITORING/MANAGEMENT
   # Tautulli - Media play and user monitoring
@@ -619,7 +576,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   # Overseer - Allows Plex users to request media
   overseerr:
@@ -655,7 +612,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   ############################# INTERNET VIDEO DOWNLOADER
   # Metube – Self-hosted YT downloader with GUI
@@ -726,7 +683,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
       
   # Calibre – Content server
   calibre:
@@ -768,35 +725,17 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
             
   ############################# SYSTEM MANAGEMENT/MONITORING
-  # Autoheal - Restart unhealthy containers, e.g. containers depending on VPN
-  autoheal:
-    image: willfarrell/autoheal:latest
-    container_name: autoheal
-    restart: always
-    networks:
-      lsio:
-    deploy:
-      replicas: 1
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - AUTOHEAL_CONTAINER_LABEL=autoheal
-      - WEBHOOK_URL="${DISCORD}"
-      - DOCKER_HOST=tcp://socket-proxy:2375
-    # volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      ## Log viewer
-      # - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
+  # deunhealth - Restart unhealthy containers, e.g. containers depending on VPN
+  deunhealth:
+    image: qmcgaw/deunhealth
+    container_name: deunhealth
+    restart: unless-stopped
+    network_mode: "none"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
@@ -816,9 +755,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - DOCKER_HOST=tcp://socket-proxy:2375
-    # volumes:
-      # - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       ## Log viewer
       # - dozzle
@@ -890,4 +828,4 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
-      - autoheal=true
+      - deunhealth.restart.on.unhealthy=true
