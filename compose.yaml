@@ -589,8 +589,6 @@ services:
       retries: 3
       start_period: 60s
     restart: unless-stopped
-    depends_on:
-      - plex
     networks:
       lsio:
     ports:
@@ -643,48 +641,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       
-  ############################# BOOK LIBRARY MANAGEMENT
-  # Readarr - Books
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
-    healthcheck:
-      test: curl --fail https://readarr.${DOMAINNAME}:443 || exit 1
-      interval: 40s
-      timeout: 30s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    depends_on:
-      sabnzbd:
-        condition: service_started
-      qbittorrent:
-        condition: service_started
-      prowlarr:
-        condition: service_started 
-    networks:
-      lsio:
-    ports:
-      - 8787:8787
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - UMASK=002
-    volumes:
-      - ${APPDIR}/readarr:/config
-      - ${DATADIR}:/data
-    labels:
-      ## Log viewer
-      - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-      ## Restart unhealthy container
-      - deunhealth.restart.on.unhealthy=true
-      
+  ############################# BOOK LIBRARY MANAGEMENT   
   # Calibre – Content server
   calibre:
     image: lscr.io/linuxserver/calibre:latest
