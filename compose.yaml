@@ -49,8 +49,6 @@ services:
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
       - ${APPDIR}/swag:/config
-      - ${APPDIR}/swag/fail2ban/fail2ban.sqlite3:/dashboard/fail2ban.sqlite3:ro
-      - ${APPDIR}/swag/log/nginx:/dashboard/logs:ro
     labels:
       ## Log viewer
       - dozzle
@@ -105,10 +103,10 @@ services:
     networks:
       lsio:
     ports:
-      # - 20144:8000 # Gluetun Control server    
       - 9997:9997 # qBittorrent WebUI
       - 49777:49777 # qBittorrent seeding port
       - 49777:49777/udp # qBittorrent seeding port
+      # - 20144:8000 # Gluetun Control server    
       # - 8888:8888/tcp # HTTP proxy
       # - 8388:8388/tcp # Shadows
       # - 8388:8388/udp # Shadowsocks
@@ -301,9 +299,6 @@ services:
   qbit_manage:
     image: bobokun/qbit_manage
     container_name: qbitmanage
-    depends_on:
-      qbittorrent:
-        condition: service_started
     restart: unless-stopped
     networks:
       lsio:
@@ -641,7 +636,7 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
       
-  ############################# BOOK LIBRARY MANAGEMENT   
+  ############################# BOOK LIBRARY MANAGEMENT
   # Calibre – Content server
   calibre:
     image: lscr.io/linuxserver/calibre:latest
