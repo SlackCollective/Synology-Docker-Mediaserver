@@ -196,6 +196,8 @@ services:
       - ARGS=
     volumes:
       - ${APPDIR}/prowlarr:/config:rw
+      - ${DATADIR}/torrents:/data/torrents:rw
+      - ${DATADIR}/usenet:/data/usenet:rw
     labels:
       ## Log viewer
       # - dozzle
