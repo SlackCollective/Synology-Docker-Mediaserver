@@ -380,14 +380,7 @@ services:
       interval: 40s
       timeout: 30s
       retries: 3
-      start_period: 60s
-    depends_on:
-      sabnzbd:
-        condition: service_started
-      qbittorrent:
-        condition: service_started
-      prowlarr:
-        condition: service_started     
+      start_period: 60s   
     restart: unless-stopped
     networks:
       lsio:
@@ -422,13 +415,6 @@ services:
       timeout: 30s
       retries: 3
       start_period: 60s
-    depends_on:
-      sabnzbd:
-        condition: service_started
-      qbittorrent:
-        condition: service_started
-      prowlarr:
-        condition: service_started 
     restart: unless-stopped
     networks:
       lsio:
@@ -547,9 +533,6 @@ services:
       retries: 3
       start_period: 60s
     restart: unless-stopped
-    depends_on:
-      plex:
-        condition: service_started
     networks:
       lsio:
     ports:
