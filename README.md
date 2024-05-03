@@ -2,12 +2,12 @@
 Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS.
 
 This compose is currently using unique users per Docker daemon, which means that Syno file permissions can cause complications. For this setup, the following commands seem to resolve issues, for me at least. They change the folder and file permissions to be accessible to the "docker" group, as well as the individual users per service:
-
+'''
 find /volume1/data -type d -exec chmod 775 {} \;
 find /volume1/docker -type d -exec chmod 775 {} \;
 find /volume1/data -type f -exec chmod 664 {} \;
 find /volume1/docker -type f -exec chmod 664 {} \;
-
+'''
 Router ports forwarded to NAS:
 Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (external) > 89 (internal) if you want to be able to redirect all web traffic to https.
 
