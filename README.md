@@ -8,7 +8,6 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 ### WEBSERVER/REVERSE PROXY/DNS/VPN
 * swag
 * cloudflare-ddns
-* gluetun
 ### FRONTEND/AUTH
 * organizr
 ### INDEXERS
@@ -20,7 +19,6 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 * qbit-manage
 * autobrr
 * omegabrr
-* cross-seed
 ### MEDIA SEARCH
 * sonarr
 * radarr
