@@ -35,7 +35,7 @@ services:
       - 89:80 # port 80 needed for https redirection
       - 81:81 # Swag dashboard LAN access
     environment:
-      - PUID=${PUID}
+      - PUID=1037
       - PGID=${PGID}
       - TZ=${TZ}
       - URL=${DOMAINNAME}
@@ -45,6 +45,7 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
+      - UMASK=007
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
@@ -69,7 +70,7 @@ services:
     networks:
       lsio:
     environment:
-      - PUID=${PUID}
+      - PUID=1038
       - PGID=${PGID}
       - TZ=${TZ}
       - API_KEY=${CF_API_KEY}
@@ -82,56 +83,6 @@ services:
     labels:
       ## Log viewer
       # - dozzle
-      ## Updating and notifications
-      - org.hotio.pullio.notify=true
-      - org.hotio.pullio.update=true
-      - org.hotio.pullio.discord.webhook=${DISCORD}
-      - org.hotio.pullio.generic.webhook=${PULLIO}
-
-  ############################# VPN
-  # Gluetun - provider-agnostic VPN client
-  gluetun:
-    image: qmcgaw/gluetun
-    container_name: gluetun
-    security_opt:
-      - no-new-privileges:true
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    restart: always
-    networks:
-      lsio:
-    ports:
-      - 9997:9997 # qBittorrent WebUI
-      - 49777:49777 # qBittorrent seeding port
-      - 49777:49777/udp # qBittorrent seeding port
-      # - 20144:8000 # Gluetun Control server    
-      # - 8888:8888/tcp # HTTP proxy
-      # - 8388:8388/tcp # Shadows
-      # - 8388:8388/udp # Shadowsocks
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - VPN_SERVICE_PROVIDER=custom
-      - VPN_TYPE=wireguard
-      - VPN_INTERFACE=tun0
-      - VPN_ENDPOINT_IP=${VPN_ENDPOINT_IP}
-      - VPN_ENDPOINT_PORT=={VPN_ENDPOINT_PORT}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_PRESHARED_KEY=${WIREGUARD_PRESHARED_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24 #needed for *Arr connections
-      # - FIREWALL_VPN_INPUT_PORTS=253 #uncomment/edit if your provider offers port fwd
-      - HTTPPROXY=off #change to on if you wish to enable
-      - SHADOWSOCKS=off #change to on if you wish to enable
-    volumes:
-      - ${APPDIR}/gluetun:/gluetun
-    labels:
-      ## Log viewer
-      - dozzle
       ## Updating and notifications
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
@@ -156,7 +107,7 @@ services:
       - 88:80
     environment:
       - fpm="true"
-      - PUID=${PUID}
+      - PUID=1039
       - PGID=${PGID}
       - TZ=${TZ}
     volumes:
@@ -189,7 +140,7 @@ services:
     ports:
       - 9696:9696
     environment:
-      - PUID=${PUID}
+      - PUID=1040
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -226,7 +177,7 @@ services:
     ports:
       - 0.0.0.0:9998:8080
     environment:
-      - PUID=${PUID}
+      - PUID=1041
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -250,19 +201,25 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     healthcheck:
-      test: curl --fail https://${DOMAINNAME}:443 || exit 1
+      test: curl --fail https://qbittorrent.${DOMAINNAME}:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
-      start_period: 60s
-    restart: unless-stopped
-    network_mode: "service:gluetun"
+      start_period: 60s 
+    restart: unless-stopped 
+    networks:
+      lsio:
+    ports:
+      - 9997:9997
+      - 49777:49777
+    # network_mode: "service:gluetun"
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     environment:
-      - PUID=${PUID}
+      - PUID=1042
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=002
       - WEBUI_PORT=9997
       - TORRENTING_PORT=49777
     volumes:
@@ -277,25 +234,6 @@ services:
       - org.hotio.pullio.update=true
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
-      ## Restart unhealthy container
-      - deunhealth.restart.on.unhealthy=true
-
-  # cross-seed - allows seeding across multiple trackers
-  cross-seed:
-    image: ghcr.io/cross-seed/cross-seed
-    container_name: cross-seed
-    command: daemon # this enables the search mode, change to daemon to specifically run the daemon
-    restart: unless-stopped
-    networks:
-      lsio:
-    ports:
-      - 2468:2468 # you'll need this for daemon mode only
-    user: ${PUID}:${PGID}
-    volumes:
-      - ${APPDIR}/crosseed:/config
-      - ${APPDIR}/qbittorrent/qBittorrent/BT_backup:/torrents:ro # your torrent clients .torrent cache, can and should be mounted read-only (e.g. qbit: `BT_Backup` | deluge: `state` | transmission: `transmission/torrents` | rtorrent: session dir from `.rtorrent.rc`)
-      - ${DATADIR}/torrents/completed:/cross-seeds
-      - ${DATADIR}:/data
 
   # qbit_manage - torrent client management
   qbit_manage:
@@ -305,7 +243,7 @@ services:
     networks:
       lsio:
     environment:
-      - PUID=${PUID}
+      - PUID=1043
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -331,7 +269,7 @@ services:
       lsio:
     ports:
       - 7474:7474
-    user: ${PUID}:${PGID}
+    user: 1044:${PGID}
     environment:
       - TZ=${TZ}
       - AUTOBRR_PORT=7474
@@ -356,7 +294,7 @@ services:
       lsio:
     ports:
       - 7441:7441
-    user: ${PUID}:${PGID}
+    user: 1045:${PGID}
     environment:
       - TZ=${TZ}
     volumes:
@@ -387,7 +325,7 @@ services:
     ports:
       - 7878:7878
     environment:
-      - PUID=${PUID}
+      - PUID=1046
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -421,7 +359,7 @@ services:
     ports:
       - 8989:8989
     environment:
-      - PUID=${PUID}
+      - PUID=1047
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -459,7 +397,7 @@ services:
     devices: # optional (used if Syno has Intel CPU, for HW transcoding)
       - /dev/dri:/dev/dri
     environment:
-      - PUID=${PUID}
+      - PUID=1048
       - PGID=${PGID}
       - TZ=${TZ}
       - serverIP=0.0.0.0
@@ -501,7 +439,7 @@ services:
     devices:
       - /dev/dri:/dev/dri
     environment:
-      - PUID=${PUID}
+      - PUID=1049
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -538,7 +476,7 @@ services:
     ports:
       - 8182:8181
     environment:
-      - PUID=${PUID}
+      - PUID=1050
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -574,7 +512,7 @@ services:
     ports:
       - 5055:5055
     environment:
-      - PUID=${PUID}
+      - PUID=1051
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -603,7 +541,7 @@ services:
     ports:
       - 8084:8081
     environment:
-      - UID=${PUID}
+      - UID=1052
       - GID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -640,7 +578,7 @@ services:
       - 8181:8181 #Calibre desktop gui HTTPS
       - 8085:8081 #Calibre content server gui
     environment:
-      - PUID=${PUID}
+      - PUID=1053
       - PGID=${PGID}
       - TZ=${TZ}
       - UMASK=002
@@ -684,14 +622,14 @@ services:
     ports:
       - 9999:8080
     environment:
+      - PUID=1054
+      - PGID=${PGID}
+      - TZ=${TZ}
       - DOZZLE_BASE=/
       - DOZZLE_LEVEL=error
       - DOZZLE_FILTER="label=dozzle" # limits logging to containers with this label
       - DOZZLE_TAILSIZE=300
       - DOZZLE_ENABLE_ACTIONS=true
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
@@ -745,7 +683,7 @@ services:
     ports:
       - 8269:8269
     environment:
-      - PUID=${PUID}
+      - PUID=1055
       - PGID=${PGID}
       - TZ=${TZ}
       - ROCKET_PORT=8269
