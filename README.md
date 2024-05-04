@@ -1,7 +1,7 @@
 # Synology-Docker-Mediaserver
 Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS.
 
-This compose is currently using one common user for each Docker daemon, and a shared group. Admin group and the Docker group have R/W permissions in Control Panel/Sahred folder for docker and data folders. To ensure correct permissions, the following commands from Trash's guide were run (to change the folder and file permissions to be accessible to the "docker" group, as well as the individual user for services):
+This compose is currently using one common user for each Docker daemon, and a shared group. Admin group and the Docker group have R/W permissions in Control Panel/Sahred folder for docker and data folders. To ensure correct permissions, the following commands from Trash's guide https://trash-guides.info/Hardlinks/How-to-setup-for/Synology/ were run (to change the folder and file permissions to be accessible to the "docker" group, as well as the individual user for services):
 ```
 sudo chown -R docker:docker /volume1/data /volume1/docker
 sudo chmod -R a=,a+rX,u+w,g+w /volume1/data /volume1/docker
