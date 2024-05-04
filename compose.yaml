@@ -31,11 +31,11 @@ services:
     networks:
       lsio:
     ports:
-      - 449:443
-      - 89:80 # port 80 needed for https redirection
-      - 81:81 # Swag dashboard LAN access
+      - 0.0.0.0:449:443
+      - 0.0.0.0:89:80 # port 80 needed for https redirection
+      - 0.0.0.0:81:81 # Swag dashboard LAN access
     environment:
-      - PUID=1037
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       - URL=${DOMAINNAME}
@@ -45,7 +45,7 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - UMASK=007
+      - UMASK=077
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
@@ -60,7 +60,7 @@ services:
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
       - deunhealth.restart.on.unhealthy=true
-            
+
   ############################# CLOUDFLARE DDNS AND SSL      
   # Cloudflare DDNS - Dynamic DNS Updater
   cf-ddns:
@@ -70,9 +70,10 @@ services:
     networks:
       lsio:
     environment:
-      - PUID=1038
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
       - API_KEY=${CF_API_KEY}
       - ZONE=${DOMAINNAME}
       - PROXIED=false
@@ -104,12 +105,13 @@ services:
     networks:
       lsio:
     ports:
-      - 88:80
+      - 0.0.0.0:88:80
     environment:
       - fpm="true"
-      - PUID=1039
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
     volumes:
       - ${APPDIR}/organizr:/config
     labels:
@@ -138,12 +140,12 @@ services:
     networks:
       lsio:
     ports:
-      - 9696:9696
+      - 0.0.0.0:9696:9696
     environment:
-      - PUID=1040
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - ARGS=
     volumes:
       - ${APPDIR}/prowlarr:/config:rw
@@ -177,10 +179,10 @@ services:
     ports:
       - 0.0.0.0:9998:8080
     environment:
-      - PUID=1041
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - HAS_IPV6=false
     volumes:
       - ${APPDIR}/sabnzbd:/config
@@ -210,16 +212,16 @@ services:
     networks:
       lsio:
     ports:
-      - 9997:9997
-      - 49777:49777
+      - 0.0.0.0:9997:9997
+      - 0.0.0.0:49777:49777
     # network_mode: "service:gluetun"
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     environment:
-      - PUID=1042
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - WEBUI_PORT=9997
       - TORRENTING_PORT=49777
     volumes:
@@ -243,10 +245,10 @@ services:
     networks:
       lsio:
     environment:
-      - PUID=1043
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
     volumes:
       - ${APPDIR}/qbitmanage:/config:rw
       - ${APPDIR}/qbittorrent/:/qbittorrent/:ro
@@ -268,12 +270,13 @@ services:
     networks:
       lsio:
     ports:
-      - 7474:7474
-    user: 1044:${PGID}
+      - 0.0.0.0:7474:7474
+    user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}
       - AUTOBRR_PORT=7474
       - AUTOBRR_HOST=0.0.0.0
+      - UMASK=022
     volumes:
       - ${APPDIR}/autobrr:/config
     labels:
@@ -293,10 +296,11 @@ services:
     networks:
       lsio:
     ports:
-      - 7441:7441
-    user: 1045:${PGID}
+      - 0.0.0.0:7441:7441
+    user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}
+      - UMASK=022
     volumes:
       - ${APPDIR}/omegabrr:/config
     labels:
@@ -323,12 +327,12 @@ services:
     networks:
       lsio:
     ports:
-      - 7878:7878
+      - 0.0.0.0:7878:7878
     environment:
-      - PUID=1046
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
     volumes:
       - ${APPDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -357,12 +361,12 @@ services:
     networks:
       lsio:
     ports:
-      - 8989:8989
+      - 0.0.0.0:8989:8989
     environment:
-      - PUID=1047
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
     volumes:
       - ${APPDIR}/sonarr:/config
       - ${DATADIR}:/data
@@ -392,14 +396,15 @@ services:
     networks:
       lsio:
     ports:
-      - 8265:8265
-      - 8266:8266
+      - 0.0.0.0:8265:8265
+      - 0.0.0.0:8266:8266
     devices: # optional (used if Syno has Intel CPU, for HW transcoding)
       - /dev/dri:/dev/dri
     environment:
-      - PUID=1048
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
@@ -439,10 +444,10 @@ services:
     devices:
       - /dev/dri:/dev/dri
     environment:
-      - PUID=1049
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - VERSION=docker
     volumes:
       - ${APPDIR}/plex:/config:rw
@@ -474,12 +479,12 @@ services:
     networks:
       lsio:
     ports:
-      - 8182:8181
+      - 0.0.0.0:8182:8181
     environment:
-      - PUID=1050
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - ARGS=
       - DEBUG=no
     volumes:
@@ -510,12 +515,12 @@ services:
     networks:
       lsio:
     ports:
-      - 5055:5055
+      - 0.0.0.0:5055:5055
     environment:
-      - PUID=1051
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
     volumes:
       - ${APPDIR}/overseerr:/config
       - ${DATADIR}/media:/data/media
@@ -539,12 +544,12 @@ services:
     networks:
       lsio:
     ports:
-      - 8084:8081
+      - 0.0.0.0:8084:8081
     environment:
-      - UID=1052
+      - UID=${PUID}
       - GID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - DELETE_FILE_ON_TRASHCAN=true
       - OUTPUT_TEMPLATE=%(playlist_title&Playlist |)S%(playlist_title|)S%(playlist_uploader& by |)S%(playlist_uploader|)S%(playlist_autonumber& - |)S%(playlist_autonumber|)S%(playlist_count& of |)S%(playlist_count|)S%(playlist_autonumber& - |)S%(uploader,creator|UNKNOWN_AUTHOR)S - %(title|UNKNOWN_TITLE)S - %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d|UNKNOWN_DATE)S.%(ext)s
     volumes:
@@ -574,14 +579,14 @@ services:
     networks:
       lsio:
     ports:
-      - 8082:8082 #Calibre desktop gui
-      - 8181:8181 #Calibre desktop gui HTTPS
-      - 8085:8081 #Calibre content server gui
+      - 0.0.0.0:8082:8082 #Calibre desktop gui
+      - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
+      - 0.0.0.0:8085:8081 #Calibre content server gui
     environment:
-      - PUID=1053
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=002
+      - UMASK=022
       - CUSTOM_PORT=8082
       - CUSTOM_HTTPS_PORT=8181
       - TITLE=BrunswickBooks
@@ -620,11 +625,12 @@ services:
     networks:
       lsio:
     ports:
-      - 9999:8080
+      - 0.0.0.0:9999:8080
     environment:
-      - PUID=1054
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
       - DOZZLE_BASE=/
       - DOZZLE_LEVEL=error
       - DOZZLE_FILTER="label=dozzle" # limits logging to containers with this label
@@ -650,11 +656,12 @@ services:
     networks:
       lsio:
     ports:
-      - 5454:5454
+      - 0.0.0.0:5454:5454
     environment:
       - TZ=${TZ}
       - DN_API_KEY=${NOTIFIARR}
       - USER=docker
+      - UMASK=022
     volumes:
       - ${APPDIR}/notifiarr:/config
     labels:
@@ -681,11 +688,12 @@ services:
     networks:
       lsio:
     ports:
-      - 8269:8269
+      - 0.0.0.0:8269:8269
     environment:
-      - PUID=1055
+      - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
+      - UMASK=022
       - ROCKET_PORT=8269
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
