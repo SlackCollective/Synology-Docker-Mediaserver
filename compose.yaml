@@ -264,7 +264,7 @@ services:
       lsio:
     ports:
       - 0.0.0.0:7474:7474
-    user: ${PUID}:${PGID}
+    user: 1031:65539
     environment:
       - TZ=${TZ}
       - AUTOBRR_PORT=7474
