@@ -45,7 +45,6 @@ services:
       - CERTPROVIDER=zerossl
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
-      - UMASK=077
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
     volumes:
@@ -73,7 +72,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - API_KEY=${CF_API_KEY}
       - ZONE=${DOMAINNAME}
       - PROXIED=false
@@ -107,11 +105,10 @@ services:
     ports:
       - 0.0.0.0:88:80
     environment:
-      - fpm="true"
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
+      - fpm="true"
     volumes:
       - ${APPDIR}/organizr:/config
     labels:
@@ -145,8 +142,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
-      - ARGS=
+      # - ARGS=
     volumes:
       - ${APPDIR}/prowlarr:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
@@ -182,7 +178,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - HAS_IPV6=false
     volumes:
       - ${APPDIR}/sabnzbd:/config
@@ -221,7 +216,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - WEBUI_PORT=9997
       - TORRENTING_PORT=49777
     volumes:
@@ -248,7 +242,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
     volumes:
       - ${APPDIR}/qbitmanage:/config:rw
       - ${APPDIR}/qbittorrent/:/qbittorrent/:ro
@@ -276,7 +269,6 @@ services:
       - TZ=${TZ}
       - AUTOBRR_PORT=7474
       - AUTOBRR_HOST=0.0.0.0
-      - UMASK=022
     volumes:
       - ${APPDIR}/autobrr:/config
     labels:
@@ -300,7 +292,6 @@ services:
     user: ${PUID}:${PGID}
     environment:
       - TZ=${TZ}
-      - UMASK=022
     volumes:
       - ${APPDIR}/omegabrr:/config
     labels:
@@ -332,7 +323,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
     volumes:
       - ${APPDIR}/radarr:/config
       - ${DATADIR}:/data
@@ -366,7 +356,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
     volumes:
       - ${APPDIR}/sonarr:/config
       - ${DATADIR}:/data
@@ -404,7 +393,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
@@ -447,7 +435,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - VERSION=docker
     volumes:
       - ${APPDIR}/plex:/config:rw
@@ -484,8 +471,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
-      - ARGS=
+      # - ARGS=
       - DEBUG=no
     volumes:
       - ${APPDIR}/tautulli:/config:rw
@@ -520,7 +506,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
     volumes:
       - ${APPDIR}/overseerr:/config
       - ${DATADIR}/media:/data/media
@@ -549,7 +534,6 @@ services:
       - UID=${PUID}
       - GID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - DELETE_FILE_ON_TRASHCAN=true
       - OUTPUT_TEMPLATE=%(playlist_title&Playlist |)S%(playlist_title|)S%(playlist_uploader& by |)S%(playlist_uploader|)S%(playlist_autonumber& - |)S%(playlist_autonumber|)S%(playlist_count& of |)S%(playlist_count|)S%(playlist_autonumber& - |)S%(uploader,creator|UNKNOWN_AUTHOR)S - %(title|UNKNOWN_TITLE)S - %(release_date>%Y-%m-%d,upload_date>%Y-%m-%d|UNKNOWN_DATE)S.%(ext)s
     volumes:
@@ -586,7 +570,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - CUSTOM_PORT=8082
       - CUSTOM_HTTPS_PORT=8181
       - TITLE=BrunswickBooks
@@ -630,7 +613,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - DOZZLE_BASE=/
       - DOZZLE_LEVEL=error
       - DOZZLE_FILTER="label=dozzle" # limits logging to containers with this label
@@ -661,7 +643,6 @@ services:
       - TZ=${TZ}
       - DN_API_KEY=${NOTIFIARR}
       - USER=docker
-      - UMASK=022
     volumes:
       - ${APPDIR}/notifiarr:/config
     labels:
@@ -693,7 +674,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - UMASK=022
       - ROCKET_PORT=8269
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
