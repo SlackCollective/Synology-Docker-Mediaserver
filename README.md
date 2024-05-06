@@ -13,6 +13,7 @@ Plex (32400 is default); Https: 443 (external) > 449 (internal). Also 80 (extern
 ### WEBSERVER/REVERSE PROXY/DNS/VPN
 * swag
 * cloudflare-ddns
+* gluetun (vpn, for qbittorrent)
 ### FRONTEND/AUTH
 * organizr
 ### INDEXERS
