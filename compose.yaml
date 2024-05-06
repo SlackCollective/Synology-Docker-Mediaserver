@@ -88,6 +88,49 @@ services:
       - org.hotio.pullio.discord.webhook=${DISCORD}
       - org.hotio.pullio.generic.webhook=${PULLIO}
 
+  ############################# VPN
+  # Gluetun - provider-agnostic VPN client
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    security_opt:
+      - no-new-privileges:true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    restart: unless-stopped
+    networks:
+      lsio:
+    ports:
+      # - 20144:8000 # Gluetun Control server    
+      - 9997:9997 # qBittorrent WebUI
+      - 3996:3996/udp # qBittorrent seeding port
+      # - 8888:8888/tcp # HTTP proxy
+      # - 8388:8388/tcp # Shadows
+      # - 8388:8388/udp # Shadowsocks
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - VPN_INTERFACE=tun0
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.1.0/24 #needed for *Arr connections
+      - FIREWALL_VPN_INPUT_PORTS=3996 #uncomment/edit if your provider offers port fwd
+      - HTTPPROXY=off #change to on if you wish to enable
+      - SHADOWSOCKS=off #change to on if you wish to enable
+    volumes:
+      - ${APPDIR}/gluetun:/gluetun
+    labels:
+      ## Log viewer
+      - dozzle
+      ## Updating and notifications
+      - org.hotio.pullio.notify=true
+      - org.hotio.pullio.update=true
+      - org.hotio.pullio.discord.webhook=${DISCORD}
+      - org.hotio.pullio.generic.webhook=${PULLIO}
+      
   ############################# FRONTENDS    
   # Organizr - Unified Frontend
   organizr:
@@ -204,12 +247,12 @@ services:
       retries: 3
       start_period: 60s 
     restart: unless-stopped 
-    networks:
-      lsio:
-    ports:
-      - 0.0.0.0:9997:9997
-      - 0.0.0.0:49777:49777
-    # network_mode: "service:gluetun"
+    # networks:
+      # lsio:
+    # ports:
+      # - 0.0.0.0:9997:9997
+      # - 0.0.0.0:49777:49777
+    network_mode: "service:gluetun"
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
     environment:
@@ -217,7 +260,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=9997
-      - TORRENTING_PORT=49777
+      # - TORRENTING_PORT=49777
     volumes:
       - ${APPDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
