@@ -105,6 +105,7 @@ services:
     ports:
       # - 20144:8000 # Gluetun Control server    
       - 9997:9997 # qBittorrent WebUI
+      - 3996:3996 # qBittorrent seeding port
       - 3996:3996/udp # qBittorrent seeding port
       # - 8888:8888/tcp # HTTP proxy
       # - 8388:8388/tcp # Shadows
@@ -241,17 +242,12 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     healthcheck:
-      test: curl --fail https://qbittorrent.${DOMAINNAME}:443 || exit 1
+      test: curl --fail https://${DOMAINNAME}:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
       start_period: 60s 
-    restart: unless-stopped 
-    # networks:
-      # lsio:
-    # ports:
-      # - 0.0.0.0:9997:9997
-      # - 0.0.0.0:49777:49777
+    restart: always 
     network_mode: "service:gluetun"
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
@@ -711,18 +707,26 @@ services:
     restart: unless-stopped
     networks:
       lsio:
-    ports:
-      - 0.0.0.0:8269:8269
+    # ports:
+      # - 0.0.0.0:8269:8269
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - ROCKET_PORT=8269
+      # - ROCKET_PORT=8269
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - DOMAIN=https://vaultwarden.${DOMAINNAME}
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
       - PUSH_INSTALLATION_KEY=${PUSH_INSTALLATION_KEY}
       - LOG_LEVEL=error
       - EXTENDED_LOGGING=false
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_FROM=vaultwarden@${DOMAINNAME}
+      - SMTP_PORT=587
+      - SMTP_SECURITY=starttls
+      - SMTP_USERNAME=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASS}
     volumes:
       - ${APPDIR}/vaultwarden:/data
     labels:
