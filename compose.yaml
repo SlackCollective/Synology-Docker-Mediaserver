@@ -22,7 +22,7 @@ services:
     cap_add:
       - NET_ADMIN
     healthcheck:
-      test: curl --fail https://cloudflare.com:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -47,6 +47,7 @@ services:
       - EMAIL=${CLOUDFLARE_EMAIL}
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      # - UMASK=022
     volumes:
       - ${APPDIR}/swag:/config
     labels:
@@ -103,13 +104,9 @@ services:
     networks:
       lsio:
     ports:
-      # - 20144:8000 # Gluetun Control server    
-      - 9997:9997 # qBittorrent WebUI
-      - 3996:3996 # qBittorrent seeding port
-      - 3996:3996/udp # qBittorrent seeding port
-      # - 8888:8888/tcp # HTTP proxy
-      # - 8388:8388/tcp # Shadows
-      # - 8388:8388/udp # Shadowsocks
+      - 0.0.0.0:9997:9997 # qBittorrent WebUI
+      - 0.0.0.0:3996:3996 # qBittorrent seeding port
+      - 0.0.0.0:3996:3996/udp # qBittorrent seeding port
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -138,7 +135,7 @@ services:
     image: organizr/organizr
     container_name: organizr
     healthcheck:
-      test: curl --fail https://${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -172,7 +169,7 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     healthcheck:
-      test: curl --fail https://prowlarr.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -208,7 +205,7 @@ services:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
     healthcheck:
-      test: curl --fail https://sabnzbd.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -242,7 +239,7 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     healthcheck:
-      test: curl --fail https://${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -256,7 +253,6 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - WEBUI_PORT=9997
-      # - TORRENTING_PORT=49777
     volumes:
       - ${APPDIR}/qbittorrent:/config:rw
       - ${DATADIR}/torrents:/data/torrents:rw
@@ -348,7 +344,7 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     healthcheck:
-      test: curl --fail https://radarr.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -381,7 +377,7 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     healthcheck:
-      test: curl --fail https://sonarr.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -414,7 +410,7 @@ services:
     image: haveagitgat/tdarr:latest
     container_name: tdarr
     healthcheck:
-      test: curl --fail https://tdarr.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -461,7 +457,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     healthcheck:
-      test: curl --fail http://172.28.5.254:32400/web || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 60s
       retries: 5
       start_period: 20s
@@ -496,7 +492,7 @@ services:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
     healthcheck:
-      test: curl --fail https://tautulli.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -531,7 +527,7 @@ services:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
     healthcheck:
-      test: curl --fail https://overseerr.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -593,7 +589,7 @@ services:
     image: lscr.io/linuxserver/calibre:latest
     container_name: calibre
     healthcheck:
-      test: curl --fail http://calibre:8082 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -605,6 +601,8 @@ services:
       - 0.0.0.0:8082:8082 #Calibre desktop gui
       - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
       - 0.0.0.0:8085:8081 #Calibre content server gui
+    devices:
+      - /dev/dri:/dev/dri
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -612,8 +610,9 @@ services:
       - CUSTOM_PORT=8082
       - CUSTOM_HTTPS_PORT=8181
       - TITLE=BrunswickBooks
-      - CLI_ARGS="--trusted-ips 192.168.1.0/24"
+      - CLI_ARGS="--trusted-ips 192.168.1.0/24,172.16.0.0/12"
       - CALIBRE_CACHE_DIRECTORY=/cache
+      - DRINODE=/dev/dri/renderD128
     volumes:
       - ${APPDIR}/calibre:/config
       - ${DATADIR}:/data
@@ -699,7 +698,7 @@ services:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     healthcheck:
-      test: curl --fail https://vaultwarden.${DOMAINNAME}:443 || exit 1
+      test: curl --fail http://localhost || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -714,7 +713,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       # - ROCKET_PORT=8269
-      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      # - ADMIN_TOKEN=${ADMIN_TOKEN}
       - DOMAIN=https://vaultwarden.${DOMAINNAME}
       - PUSH_ENABLED=true
       - PUSH_INSTALLATION_ID=${PUSH_INSTALLATION_ID}
@@ -731,7 +730,7 @@ services:
       - ${APPDIR}/vaultwarden:/data
     labels:
       ## Log viewer
-      - dozzle
+      # - dozzle
       ## Updating and notifications
       - org.hotio.pullio.notify=true
       - org.hotio.pullio.update=true
