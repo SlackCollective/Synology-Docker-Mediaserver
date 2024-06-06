@@ -598,11 +598,12 @@ services:
     networks:
       lsio:
     ports:
-      - 8082:8080 #Calibre desktop gui
-      - 8181:8181 #Calibre desktop gui HTTPS
-      - 8085:8081 #Calibre content server gui
+      - 0.0.0.0:8082:8082 #Calibre desktop gui
+      - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
+      - 0.0.0.0:8085:8081 #Calibre content server gui
     devices:
       - /dev/dri:/dev/dri
+    environment:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
