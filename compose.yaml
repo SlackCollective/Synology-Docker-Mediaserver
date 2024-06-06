@@ -22,7 +22,7 @@ services:
     cap_add:
       - NET_ADMIN
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -135,7 +135,7 @@ services:
     image: organizr/organizr
     container_name: organizr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -169,7 +169,7 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -205,7 +205,7 @@ services:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -239,7 +239,7 @@ services:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -344,7 +344,7 @@ services:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -377,7 +377,7 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -410,7 +410,7 @@ services:
     image: haveagitgat/tdarr:latest
     container_name: tdarr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -457,7 +457,7 @@ services:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 60s
       retries: 5
       start_period: 20s
@@ -492,7 +492,7 @@ services:
     image: lscr.io/linuxserver/tautulli:latest
     container_name: tautulli
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -527,7 +527,7 @@ services:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -589,7 +589,7 @@ services:
     image: lscr.io/linuxserver/calibre:latest
     container_name: calibre
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
@@ -598,9 +598,9 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8082:8082 #Calibre desktop gui
-      - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
-      - 0.0.0.0:8085:8081 #Calibre content server gui
+      - 8082:8080 #Calibre desktop gui
+      - 8181:8181 #Calibre desktop gui HTTPS
+      - 8085:8081 #Calibre content server gui
     devices:
       - /dev/dri:/dev/dri
     environment:
@@ -698,7 +698,7 @@ services:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     healthcheck:
-      test: curl --fail http://localhost || exit 1
+      test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
       timeout: 30s
       retries: 3
