@@ -46,8 +46,8 @@ services:
       - STAGING=false
       - EMAIL=${CLOUDFLARE_EMAIL}
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
+      - MAXMINDDB_USER_ID={MAXMIND_ID}
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
-      # - UMASK=022
     volumes:
       - ${APPDIR}/swag:/config
     labels:
