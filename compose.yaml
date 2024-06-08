@@ -48,6 +48,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:swag-cloudflare-real-ip|linuxserver/mods:swag-maxmind|linuxserver/mods:swag-dashboard
       - MAXMINDDB_USER_ID={MAXMIND_ID}
       - MAXMINDDB_LICENSE_KEY=${MAXMINDDB_LICENSE_KEY}
+      - UMASK=027
     volumes:
       - ${APPDIR}/swag:/config
     labels:
@@ -598,26 +599,22 @@ services:
     networks:
       lsio:
     ports:
-      - 0.0.0.0:8082:8082 #Calibre desktop gui
+      - 0.0.0.0:8082:8080 #Calibre desktop gui
       - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
       - 0.0.0.0:8085:8081 #Calibre content server gui
-    devices:
-      - /dev/dri:/dev/dri
-    environment:
+    # devices:
+      # - /dev/dri:/dev/dri
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      - CUSTOM_PORT=8082
-      - CUSTOM_HTTPS_PORT=8181
+      # - CUSTOM_PORT=8082
       - TITLE=BrunswickBooks
       - CLI_ARGS="--trusted-ips 192.168.1.0/24,172.16.0.0/12"
-      - CALIBRE_CACHE_DIRECTORY=/cache
-      - DRINODE=/dev/dri/renderD128
+      # - DRINODE=/dev/dri/renderD128
     volumes:
       - ${APPDIR}/calibre:/config
       - ${DATADIR}:/data
-      - ${APPDIR}/calibre/cache:/cache
     labels:
       ## Log viewer
       - dozzle
