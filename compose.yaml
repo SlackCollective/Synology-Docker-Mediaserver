@@ -234,11 +234,14 @@ services:
       - org.hotio.pullio.generic.webhook=${PULLIO}
       ## Restart unhealthy container
       - deunhealth.restart.on.unhealthy=true
-      
+
   # qbittorrent - torrent downloader with VPN
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    depends_on:
+      gluetun:
+        condition: service_healthy
     healthcheck:
       test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
@@ -344,6 +347,13 @@ services:
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
+      prowlarr:
+        condition: service_healthy
     healthcheck:
       test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
@@ -377,6 +387,13 @@ services:
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    depends_on:
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
+      prowlarr:
+        condition: service_healthy
     healthcheck:
       test: curl --fail https://cloudflare.com:443 || exit 1
       interval: 40s
@@ -608,12 +625,13 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - CUSTOM_PORT=8082
       - TITLE=BrunswickBooks
+      - CALIBRE_CACHE_DIRECTORY=/cache
       - CLI_ARGS="--trusted-ips 192.168.1.0/24,172.16.0.0/12"
       # - DRINODE=/dev/dri/renderD128
     volumes:
       - ${APPDIR}/calibre:/config
+      - ${APPDIR}/calibre/cache:/cache
       - ${DATADIR}:/data
     labels:
       ## Log viewer
