@@ -619,8 +619,6 @@ services:
       - 0.0.0.0:8082:8080 #Calibre desktop gui
       - 0.0.0.0:8181:8181 #Calibre desktop gui HTTPS
       - 0.0.0.0:8085:8081 #Calibre content server gui
-    # devices:
-      # - /dev/dri:/dev/dri
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -628,7 +626,7 @@ services:
       - TITLE=BrunswickBooks
       - CALIBRE_CACHE_DIRECTORY=/cache
       - CLI_ARGS="--trusted-ips 192.168.1.0/24,172.16.0.0/12"
-      # - DRINODE=/dev/dri/renderD128
+      - DRINODE=/dev/dri/renderD128
     volumes:
       - ${APPDIR}/calibre:/config
       - ${APPDIR}/calibre/cache:/cache
@@ -728,7 +726,6 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
-      # - ROCKET_PORT=8269
       # - ADMIN_TOKEN=${ADMIN_TOKEN}
       - DOMAIN=https://vaultwarden.${DOMAINNAME}
       - PUSH_ENABLED=true
