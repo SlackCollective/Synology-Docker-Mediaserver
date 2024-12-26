@@ -1,3 +1,5 @@
+# Note: I've been using Traefik for many months now, hence to updates here
+
 # Synology-Docker-Mediaserver
 Working configuration of media services, running Linuxserver Swag for reverse proxy, and various other Docker containers, on a Synology 218+ NAS.
 
